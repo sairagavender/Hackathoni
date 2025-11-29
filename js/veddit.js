@@ -10,67 +10,73 @@
   let replyParentId = null;
   let focusedCommentId = null; 
 
-  // --- AI MODERATION ENGINE (Gemini 1.5 Flash) ---
-  const GEMINI_API_KEY = "PASTE_YOUR_GEMINI_API_KEY_HERE"; 
-  
-  async function checkContentSafety(text) {
-      if(!text) return true;
-      
-      // FIX 1: Updated Model Name to 'gemini-1.5-flash-latest' which is more stable
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`;
-      
-      const prompt = `
-        Classify this text into one of two categories: "SAFE" or "UNSAFE".
-        
-        "UNSAFE" includes:
-        - Explicit sexual content or erotica
-        - Severe violence or gore
-        - Hate speech or harassment
-        - Self-harm promotion
-        
-        Text: "${text}"
-        
-        Reply with ONLY the word "SAFE" or "UNSAFE".
-      `;
+  // ------------------------------
+// Text moderation: toxicity model
+// ------------------------------
+let __toxicityModel = null;
 
-      try {
-          const response = await fetch(url, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-          });
+/**
+ * Loads the toxicity model (cached).
+ * threshold: float 0..1 (higher = stricter)
+ */
+async function loadToxicityModel(threshold = 0.85) {
+  if (__toxicityModel) return __toxicityModel;
+  // load() returns a model object with .classify()
+  __toxicityModel = await toxicity.load(threshold, [
+    'toxicity',
+    'insult',
+    'obscene',
+    'identity_attack',
+    'sexual_explicit',
+    'threat',
+    'severe_toxicity'
+  ]);
+  return __toxicityModel;
+}
 
-          const data = await response.json();
-          
-          // FIX 2: Handle API Errors (like 404) by BLOCKING instead of allowing
-          if(data.error) {
-              console.error("Gemini API Error:", data.error);
-              return `AI Error: model didnt find this post safe`; 
-          }
+/**
+ * checkContentSafety(text)
+ * Returns:
+ *   - true  => allowed
+ *   - string => blocked / reason
+ */
+async function checkContentSafety(text) {
+  if (!text || !text.trim()) return true;
 
-          // FIX 3: Check for Safety Filters (Google's internal block)
-          if (data.promptFeedback && data.promptFeedback.blockReason) {
-              return `Blocked by AI Safety Filters: ${data.promptFeedback.blockReason}`;
-          }
+  // quick client-side cheap checks first (speed + fallback)
+  const quickBlocked = ["bomb", "kill", "suicide"]; // add words you want blocked always
+  const lower = text.toLowerCase();
+  for (const w of quickBlocked) if (lower.includes(w)) return `Blocked: contains "${w}"`;
 
-          if (!data.candidates || data.candidates.length === 0) {
-              return "Blocked: Content deemed too unsafe to process.";
-          }
+  try {
+    const model = await loadToxicityModel(0.85); // adjust threshold up/down
+    // model.classify expects an array of strings
+    const predictions = await model.classify([text]);
 
-          const result = data.candidates[0].content.parts[0].text.trim().toUpperCase();
-
-          if (result.includes("SAFE") && !result.includes("UNSAFE")) {
-              return true;
-          } else {
-              return "Flagged as UNSAFE by AI.";
-          }
-
-      } catch (e) {
-          console.error("Network Error", e);
-          // FIX 4: Block post if network fails
-          return "AI Connection Failed. Cannot verify safety."; 
+    // predictions is an array of label objects
+    // each object: {label: "toxicity", results: [{probabilities: [...], match: bool}]}
+    const matched = [];
+    for (const p of predictions) {
+      const result = p.results && p.results[0];
+      if (result && result.match) {
+        matched.push(p.label);
       }
+    }
+
+    if (matched.length > 0) {
+      // build a human reason (you can customize)
+      return `Flagged by model: ${matched.join(", ")}`;
+    }
+
+    return true; // safe
+  } catch (err) {
+    console.warn("Toxicity model failed, falling back to simple filter:", err);
+    // Final fallback: simple keyword filter (non-blocking)
+    const fallback = ["sex","porn","fuck","rape"];
+    for (const f of fallback) if (lower.includes(f)) return `Blocked: contains "${f}"`;
+    return true;
   }
+}
 
   // --- Auth ---
   auth.onAuthStateChanged(async user => {

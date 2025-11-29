@@ -3,604 +3,510 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Campus Buzz — Events</title>
+    <title>Campus Buzz — Veddit</title>
     
     <script src="https://unpkg.com/lucide@latest"></script>
     
-    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
-
     <style>
-        /* --- CORE CSS (No Tailwind) --- */
+        /* --- 1. VARIABLES & RESET --- */
         :root {
             --primary: #4f46e5;
             --primary-hover: #4338ca;
-            --bg: #f4f6fb;
-            --surface: #ffffff;
+            --bg: #f3f4f6;
+            --card-bg: #ffffff;
             --text-main: #1f2937;
             --text-muted: #6b7280;
             --border: #e5e7eb;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             --danger: #ef4444;
         }
 
-        * { box-sizing: border-box; }
-        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: var(--bg);
             color: var(--text-main);
-            margin: 0;
-            display: flex;
             height: 100vh;
+            display: flex;
             overflow: hidden;
         }
 
-        /* --- SIDEBAR --- */
-        .sidebar {
-            width: 260px;
-            background: var(--surface);
+        * { box-sizing: border-box; }
+
+        /* --- 2. VERTICAL NAVBAR --- */
+        .navbar {
+            width: 80px;
+            height: 100vh;
+            background: white;
             border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
-            padding: 20px;
+            align-items: center;
+            padding-top: 20px;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 100;
             flex-shrink: 0;
         }
 
-        .logo {
-            font-size: 24px;
-            font-weight: 800;
-            color: var(--primary);
-            text-align: center;
-            margin-bottom: 40px;
-            letter-spacing: -1px;
+        .navbar:hover { width: 240px; align-items: flex-start; }
+        .logo-icon {
+            width: 40px; height: 40px; background: var(--primary); color: white;
+            border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 20px; margin-bottom: 40px; flex-shrink: 0;
+            margin-left: 20px; transition: 0.3s;
         }
-
-        .nav-links {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            flex: 1;
+        .navbar:hover .logo-icon { margin-left: 20px; }
+        .nav-link {
+            display: flex; align-items: center; text-decoration: none; color: var(--text-muted);
+            padding: 15px 20px; width: 100%; transition: 0.2s; position: relative;
+            white-space: nowrap; overflow: hidden;
         }
+        .nav-link i { min-width: 24px; height: 24px; margin-right: 20px; }
+        .nav-text { opacity: 0; transform: translateX(-10px); transition: 0.2s; font-weight: 600; }
+        .navbar:hover .nav-text { opacity: 1; transform: translateX(0); transition-delay: 0.1s; }
+        .nav-link:hover { background-color: #eef2ff; color: var(--primary); }
+        .nav-link:hover::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--primary); }
 
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 16px;
-            text-decoration: none;
-            color: var(--text-muted);
-            border-radius: 12px;
-            font-weight: 500;
-            transition: 0.2s;
+        /* --- 3. MAIN SCROLLABLE AREA --- */
+        .main-content { flex: 1; overflow-y: auto; height: 100vh; position: relative; }
+
+        /* Header */
+        header {
+            background: white; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 30;
+            padding: 0 30px; height: 64px; display: flex; align-items: center; justify-content: space-between;
         }
+        header h1 { font-size: 20px; font-weight: 700; color: var(--primary); margin: 0; }
 
-        .nav-item:hover { background-color: #f9fafb; color: var(--text-main); }
-        .nav-item.active { background-color: #eef2ff; color: var(--primary); }
-        .nav-item i { width: 20px; height: 20px; }
-
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding-top: 20px;
-            border-top: 1px solid var(--border);
+        /* Operator Button */
+        .add-btn {
+            background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 6px;
+            font-size: 13px; font-weight: 600; cursor: pointer; display: none; /* Hidden by default */
+            align-items: center; gap: 6px; transition: 0.2s;
         }
+        .add-btn:hover { background: var(--primary-hover); }
 
-        .avatar {
-            width: 40px;
-            height: 40px;
-            background: #eef2ff;
-            color: var(--primary);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
+        /* Filters */
+        .filter-bar {
+            background: #f9fafb; border-bottom: 1px solid var(--border); padding: 12px 30px;
+            display: flex; align-items: center; gap: 10px; overflow-x: auto;
         }
-
-        /* --- MAIN CONTENT --- */
-        .main {
-            flex: 1;
-            overflow-y: auto;
-            padding: 40px;
+        .filter-btn {
+            padding: 6px 16px; border-radius: 50px; font-size: 13px; font-weight: 500;
+            border: 1px solid var(--border); background: white; color: var(--text-muted);
+            cursor: pointer; transition: 0.2s; white-space: nowrap;
         }
+        .filter-btn:hover, .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 
-        .header-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            margin-bottom: 30px;
+        /* Container */
+        .container { max-width: 1200px; margin: 0 auto; padding: 30px; }
+        .section-header { margin-bottom: 24px; }
+        .section-header h2 { font-size: 24px; margin: 0; color: var(--text-main); }
+        .section-header p { margin: 4px 0 0 0; color: var(--text-muted); font-size: 14px; }
+
+        /* Grid */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px; }
+
+        /* Event Card */
+        .event-card {
+            background: white; border-radius: 12px; overflow: hidden; border: 1px solid var(--border);
+            transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; display: flex; flex-direction: column; position: relative;
         }
-
-        h1 { margin: 0; font-size: 32px; }
-        .subtitle { margin: 5px 0 0; color: var(--text-muted); }
-
-        /* Button Styles */
-        .btn {
-            padding: 10px 20px;
-            border-radius: 8px;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
-            transition: 0.2s;
-            font-size: 14px;
-        }
-
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--primary-hover); }
+        .event-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
         
-        .btn-ghost { background: transparent; color: var(--text-muted); }
-        .btn-ghost:hover { background: #f3f4f6; color: var(--text-main); }
-
-        .btn-delete {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(239, 68, 68, 0.9);
-            color: white;
-            border: none;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2;
+        .card-image { height: 160px; width: 100%; background: #e5e7eb; position: relative; overflow: hidden; }
+        .card-image img { width: 100%; height: 100%; object-fit: cover; }
+        .card-overlay {
+            position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            padding: 20px 12px 10px 12px; color: white; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px;
         }
-        .btn-delete:hover { background: #dc2626; }
-
-        /* --- EVENTS GRID --- */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 24px;
+        .card-content { padding: 16px; flex: 1; display: flex; flex-direction: column; }
+        .card-title { font-size: 16px; font-weight: 700; margin: 0 0 4px 0; color: var(--text-main); line-height: 1.4; }
+        .card-loc { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
+        .card-tag {
+            display: inline-block; background: #eef2ff; color: var(--primary); font-size: 11px;
+            padding: 2px 8px; border-radius: 4px; font-weight: 600; align-self: flex-start; margin-top: auto;
         }
-
-        .card {
-            background: var(--surface);
-            border-radius: 16px;
-            border: 1px solid var(--border);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            transition: transform 0.2s, box-shadow 0.2s;
-            position: relative;
+        
+        /* Delete Button (Operator Only) */
+        .delete-card-btn {
+            position: absolute; top: 10px; right: 10px; background: white; color: var(--danger);
+            border: 1px solid var(--border); border-radius: 4px; width: 28px; height: 28px;
+            display: none; align-items: center; justify-content: center; z-index: 10;
         }
+        .delete-card-btn:hover { background: #fee2e2; }
 
-        .card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 24px -8px rgba(0,0,0,0.1);
+        /* Empty State */
+        .empty-state {
+            text-align: center; padding: 60px 20px; background: white; border-radius: 12px;
+            border: 2px dashed var(--border); color: var(--text-muted); display: none;
         }
+        .empty-state.visible { display: block; }
 
-        .card-image-wrap {
-            height: 180px;
-            background: #e5e7eb;
-            position: relative;
+        /* --- 4. MODALS (View & Add) --- */
+        .modal-backdrop {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 1000;
+            display: none; align-items: center; justify-content: center; padding: 20px;
         }
+        .modal-backdrop.active { display: flex; animation: fadeIn 0.2s ease-out; }
 
-        .card-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+        .modal-card {
+            background: white; width: 100%; max-width: 800px; border-radius: 16px;
+            overflow: hidden; display: flex; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); max-height: 90vh;
         }
+        /* Add Event Modal Specifics */
+        .modal-form-card { max-width: 500px; flex-direction: column; overflow-y: auto; }
+        
+        .modal-img-col { width: 40%; position: relative; }
+        .modal-img-col img { width: 100%; height: 100%; object-fit: cover; }
+        .modal-info-col { width: 60%; padding: 30px; display: flex; flex-direction: column; overflow-y: auto; position: relative; }
 
-        .category-badge {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            background: rgba(255, 255, 255, 0.95);
-            color: var(--primary);
-            font-size: 11px;
-            font-weight: 700;
-            padding: 4px 10px;
-            border-radius: 20px;
-            text-transform: uppercase;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        .close-btn {
+            position: absolute; top: 15px; right: 15px; background: #f3f4f6; border: none; border-radius: 50%;
+            width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #666; z-index: 10;
         }
+        .close-btn:hover { background: #e5e7eb; }
 
-        .card-body {
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            flex: 1;
+        .modal-cat { color: var(--primary); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .modal-title { font-size: 24px; font-weight: 800; margin: 5px 0 15px 0; color: var(--text-main); line-height: 1.2; }
+        .modal-meta div { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 14px; color: var(--text-muted); }
+        .modal-desc { font-size: 15px; line-height: 1.6; color: #4b5563; margin-bottom: 30px; }
+        
+        .modal-cta {
+            margin-top: auto; background: var(--primary); color: white; text-decoration: none;
+            padding: 12px; border-radius: 8px; font-weight: 600; text-align: center; display: flex;
+            align-items: center; justify-content: center; gap: 8px; transition: 0.2s;
         }
+        .modal-cta:hover { background: var(--primary-hover); }
 
-        .card-date {
-            font-size: 12px;
-            color: var(--text-muted);
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin-bottom: 8px;
-        }
-
-        .card-title {
-            margin: 0 0 8px 0;
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--text-main);
-            line-height: 1.3;
-        }
-
-        .card-desc {
-            font-size: 14px;
-            color: var(--text-muted);
-            margin: 0 0 20px 0;
-            line-height: 1.5;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            flex: 1;
-        }
-
-        .card-footer {
-            margin-top: auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-top: 1px solid #f3f4f6;
-            padding-top: 16px;
-        }
-
-        .countdown {
-            font-size: 11px;
-            font-weight: 700;
-            padding: 4px 10px;
-            border-radius: 12px;
-        }
-        .count-green { background: #dcfce7; color: #166534; }
-        .count-red { background: #fee2e2; color: #991b1b; }
-
-        /* --- MODAL --- */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.6);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            backdrop-filter: blur(4px);
-        }
-
-        .modal-box {
-            background: white;
-            width: 90%;
-            max-width: 500px;
-            border-radius: 16px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
-
-        .modal-header {
-            padding: 20px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #f9fafb;
-        }
-
-        .modal-header h3 { margin: 0; font-size: 18px; }
-
-        .modal-body { padding: 24px; }
-
+        /* Form Elements */
         .form-group { margin-bottom: 16px; }
-        .form-row { display: flex; gap: 16px; }
-        .form-col { flex: 1; }
-
-        label {
-            display: block;
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            margin-bottom: 6px;
+        .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; }
+        .form-input, .form-select, .form-textarea {
+            width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-family: inherit; font-size: 14px;
         }
+        .form-input:focus { outline: none; border-color: var(--primary); }
+        .form-row { display: flex; gap: 12px; }
 
-        input, select, textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 14px;
-            font-family: inherit;
-        }
-        
-        input:focus, select:focus, textarea:focus {
-            outline: 2px solid var(--primary);
-            border-color: var(--primary);
-        }
-
-        .helper-text { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
-
-        .hidden { display: none !important; }
-
-        /* Mobile Responsive */
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
         @media (max-width: 768px) {
-            .sidebar { display: none; } /* Simplified for Vanilla CSS request */
-            .main { padding: 20px; }
-            .header-row { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .navbar { display: none; }
+            .modal-card { flex-direction: column; height: auto; max-height: 85vh; }
+            .modal-img-col { width: 100%; height: 200px; }
+            .modal-info-col { width: 100%; padding: 20px; }
         }
     </style>
 </head>
 <body>
 
-    <aside class="sidebar">
-        <div class="logo">VEDDIT</div>
-        <nav class="nav-links">
-            <a href="index.html" class="nav-item"><i data-lucide="home"></i> Home</a>
-            <a href="veddit.html" class="nav-item"><i data-lucide="message-circle"></i> Forum</a>
-            <a href="calendram.html" class="nav-item"><i data-lucide="calendram"></i> Calendar</a>
-            <a href="#" class="nav-item active"><i data-lucide="ticket"></i> Campus Buzz</a>
-        </nav>
-        <div class="user-profile">
-            <div class="avatar" id="user-avatar">G</div>
-            <div>
-                <div style="font-weight:bold; font-size:14px;" id="user-name">Guest User</div>
-                <div style="font-size:12px; color:var(--text-muted);" id="user-role">Viewer</div>
-            </div>
+    <nav class="navbar">
+        <div class="logo-icon">V</div>
+        <div style="flex:1; width:100%; display:flex; flex-direction:column; justify-content:center; gap:10px;">
+            <a href="veddit.html" class="nav-link"><i data-lucide="message-circle"></i><span class="nav-text">Forum</span></a>
+            <a href="calendram.html" class="nav-link"><i data-lucide="calendar"></i><span class="nav-text">Calendram</span></a>
+            <a href="events.html" class="nav-link"><i data-lucide="ticket"></i><span class="nav-text">Campus Buzz</span></a>
         </div>
-    </aside>
+    </nav>
 
-    <div class="main">
-        
-        <div class="header-row">
-            <div>
-                <h1>Campus Buzz</h1>
-                <p class="subtitle">Upcoming workshops, fests, and competitions.</p>
-            </div>
-            
-            <button id="add-event-btn" class="btn btn-primary hidden" onclick="openModal()">
-                <i data-lucide="plus"></i> Add Event
+    <div class="main-content">
+        <header>
+            <h1>Campus Buzz</h1>
+            <button id="add-event-btn" class="add-btn" onclick="openAddModal()">
+                <i data-lucide="plus-circle" style="width:16px;"></i> Add Event
             </button>
-        </div>
+        </header>
 
-        <div id="events-grid" class="grid">
-            <div style="grid-column: 1/-1; text-align:center; color:#999; padding: 40px;">
-                Loading events...
+        <div class="filter-bar" id="filter-container">
+            <i data-lucide="filter" style="color: #9ca3af; width: 16px;"></i>
             </div>
-        </div>
 
-    </div>
-
-    <div id="event-modal" class="modal-overlay">
-        <div class="modal-box">
-            <div class="modal-header">
-                <h3>Publish New Event</h3>
-                <button class="btn-ghost" onclick="closeModal()" style="padding:4px;"><i data-lucide="x"></i></button>
+        <div class="container">
+            <div class="section-header">
+                <h2>Recommended Events</h2>
+                <p>Explore the best campus activities happening near you</p>
             </div>
-            <form class="modal-body" onsubmit="handlePublish(event)">
-                
-                <div class="form-group">
-                    <label>Event Name</label>
-                    <input type="text" id="e-name" required placeholder="e.g. Annual Tech Fest">
+
+            <div id="events-grid" class="grid">
                 </div>
 
-                <div class="form-row">
-                    <div class="form-col form-group">
-                        <label>Category</label>
-                        <select id="e-type">
-                            <option>Tech</option>
-                            <option>Cultural</option>
-                            <option>Sports</option>
-                            <option>Workshop</option>
-                        </select>
-                    </div>
-                    <div class="form-col form-group">
-                        <label>Date</label>
-                        <input type="date" id="e-date" required>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-col form-group">
-                        <label>Time</label>
-                        <input type="time" id="e-time">
-                    </div>
-                    <div class="form-col" style="display:flex; align-items:center; padding-top:20px;">
-                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; text-transform:none; color:var(--text-main);">
-                            <input type="checkbox" id="e-countdown" checked style="width:auto;"> Show Countdown
-                        </label>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Registration Link (Google Form)</label>
-                    <input type="url" id="e-link" required placeholder="https://forms.google.com/...">
-                    <div class="helper-text">Students will be redirected here.</div>
-                </div>
-
-                <div class="form-group">
-                    <label>Description</label>
-                    <textarea id="e-desc" rows="3" placeholder="Short details about the event..."></textarea>
-                </div>
-
-                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
-                    <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-                    <button type="submit" id="submit-btn" class="btn btn-primary">Publish Event</button>
-                </div>
-
-            </form>
+            <div id="empty-state" class="empty-state visible">
+                <i data-lucide="calendar-x" style="width: 48px; height: 48px; margin-bottom: 10px;"></i>
+                <h3>No events found</h3>
+                <p>Events added by operators will appear here.</p>
+            </div>
         </div>
     </div>
 
-    <script>
-        // --- 1. FIREBASE CONFIG ---
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const auth = firebase.auth();
+    <div id="event-modal" class="modal-backdrop">
+        <div class="modal-card">
+            <div class="modal-img-col">
+                <img id="modal-image" src="" alt="Event Image">
+            </div>
+            <div class="modal-info-col">
+                <button class="close-btn" onclick="closeModal('event-modal')"><i data-lucide="x" style="width: 18px;"></i></button>
+                <div id="modal-category" class="modal-cat"></div>
+                <div id="modal-title" class="modal-title"></div>
+                <div class="modal-meta">
+                    <div><i data-lucide="calendar" style="width:16px;"></i> <span id="modal-date"></span> &bull; <span id="modal-time"></span></div>
+                    <div><i data-lucide="map-pin" style="width:16px;"></i> <span id="modal-location"></span></div>
+                </div>
+                <div id="modal-description" class="modal-desc"></div>
+                <a id="modal-register-btn" href="#" target="_blank" class="modal-cta">
+                    Register Here <i data-lucide="external-link" style="width:16px;"></i>
+                </a>
+            </div>
+        </div>
+    </div>
 
-        // --- 2. AUTH & STATE ---
-        let currentUser = null;
-        let userRole = 'guest'; // Default to guest, NOT redirecting
-
-        auth.onAuthStateChanged(async (user) => {
-            if (user) {
-                // If logged in, fetch details
-                const doc = await db.collection('users').doc(user.uid).get();
-                userRole = doc.exists ? doc.data().role : 'student';
-                currentUser = user;
+    <div id="add-modal" class="modal-backdrop">
+        <div class="modal-card modal-form-card">
+            <div class="modal-info-col" style="width:100%;">
+                <button class="close-btn" onclick="closeModal('add-modal')"><i data-lucide="x" style="width: 18px;"></i></button>
+                <h3 style="margin-top:0;">Add New Event</h3>
                 
-                document.getElementById('user-name').innerText = doc.exists ? doc.data().username : 'User';
-                document.getElementById('user-role').innerText = userRole;
-                document.getElementById('user-avatar').innerText = (doc.exists ? doc.data().username : 'U').charAt(0).toUpperCase();
-
-                // Show Operator Tools
-                if (userRole === 'operator') {
-                    document.getElementById('add-event-btn').classList.remove('hidden');
-                }
-            } else {
-                // If NOT logged in (Guest Mode)
-                console.log("Guest User - No Redirect");
-                document.getElementById('user-name').innerText = "Guest Visitor";
-                document.getElementById('user-role').innerText = "Read Only";
-            }
-            // Load Data regardless of auth state
-            startListener();
-        });
-
-        // --- 3. DATA LISTENER ---
-        function startListener() {
-            const today = new Date().toISOString().substring(0, 10);
-            
-            // Fetch events from today onwards
-            db.collection('global_events')
-              .where('date', '>=', today)
-              .orderBy('date', 'asc')
-              .onSnapshot(snap => {
-                  renderEvents(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-              });
-        }
-
-        // --- 4. RENDER LOGIC ---
-        function renderEvents(events) {
-            const grid = document.getElementById('events-grid');
-            grid.innerHTML = '';
-
-            if (events.length === 0) {
-                grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#999; padding:60px;">
-                    <i data-lucide="calendar-off" style="width:48px; height:48px; margin-bottom:10px;"></i>
-                    <p>No upcoming events found.</p>
-                </div>`;
-                lucide.createIcons();
-                return;
-            }
-
-            events.forEach(e => {
-                const dateObj = new Date(e.date);
-                const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                
-                // Countdown Logic
-                const diff = Math.ceil((dateObj - new Date()) / (1000 * 60 * 60 * 24));
-                let badge = '';
-                if(e.showCountdown && diff >= 0) {
-                    const colorClass = diff <= 2 ? 'count-red' : 'count-green';
-                    badge = `<span class="countdown ${colorClass}">${diff} days left</span>`;
-                }
-
-                // Operator Delete Button
-                const deleteBtn = userRole === 'operator' 
-                    ? `<button class="btn-delete" onclick="deleteEvent('${e.id}')"><i data-lucide="trash-2" style="width:16px;"></i></button>`
-                    : '';
-
-                // Random gradient for image placeholder since we removed Image URL input
-                const gradients = [
-                    'linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%)',
-                    'linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%)',
-                    'linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%)',
-                    'linear-gradient(120deg, #fccb90 0%, #d57eeb 100%)'
-                ];
-                const randomBg = gradients[Math.floor(Math.random() * gradients.length)];
-
-                const card = document.createElement('div');
-                card.className = "card";
-                
-                card.innerHTML = `
-                    <div class="card-image-wrap" style="background: ${randomBg}; display:flex; align-items:center; justify-content:center;">
-                        <span style="font-size:40px; opacity:0.3;">📅</span>
-                        <div class="category-badge">${e.eventType}</div>
-                        ${deleteBtn}
+                <form id="add-event-form">
+                    <div class="form-group">
+                        <label>Event Title</label>
+                        <input type="text" id="add-title" class="form-input" required placeholder="e.g. Hackathon 2025">
                     </div>
                     
-                    <div class="card-body">
-                        <div class="card-date">
-                            <i data-lucide="calendar" style="width:14px;"></i> ${dateStr}
-                            <span style="margin-left:auto;">${e.time || ''}</span>
+                    <div class="form-row">
+                        <div class="form-group" style="flex:1">
+                            <label>Date</label>
+                            <input type="date" id="add-date" class="form-input" required>
                         </div>
-                        
-                        <h3 class="card-title">${e.name}</h3>
-                        <p class="card-desc">${e.description || 'No description provided.'}</p>
-                        
-                        <div class="card-footer">
-                            ${badge}
-                            <a href="${e.registrationLink}" target="_blank" class="btn btn-primary">
-                                Register <i data-lucide="arrow-right" style="width:16px;"></i>
-                            </a>
+                        <div class="form-group" style="flex:1">
+                            <label>Time</label>
+                            <input type="time" id="add-time" class="form-input" required>
                         </div>
                     </div>
-                `;
-                grid.appendChild(card);
-            });
+
+                    <div class="form-row">
+                        <div class="form-group" style="flex:1">
+                            <label>Location</label>
+                            <input type="text" id="add-location" class="form-input" required placeholder="e.g. Auditorium">
+                        </div>
+                        <div class="form-group" style="flex:1">
+                            <label>Club / Category</label>
+                            <select id="add-club" class="form-select" required>
+                                <option value="Tech">Tech Club</option>
+                                <option value="Cultural">Cultural Club</option>
+                                <option value="Sports">Sports</option>
+                                <option value="Academic">Academic</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Registration Link</label>
+                        <input type="url" id="add-link" class="form-input" placeholder="https://forms.google.com/..." required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Image URL (Optional)</label>
+                        <input type="url" id="add-image" class="form-input" placeholder="https://...">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="add-desc" class="form-textarea" rows="4" required placeholder="Event details..."></textarea>
+                    </div>
+
+                    <button type="submit" class="modal-cta" style="border:0; width:100%; cursor:pointer;">Publish Event</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, getDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+
+        // CONFIG
+        const firebaseConfig = {
+            apiKey: "AIzaSyDCOT7bvPnU4zhOAkOG_nFxSLP0f58itgo",
+            authDomain: "veddit-a03a0.firebaseapp.com",
+            projectId: "veddit-a03a0",
+            storageBucket: "veddit-a03a0.firebasestorage.app",
+            messagingSenderId: "841975514674",
+            appId: "1:841975514674:web:3dcea2a6931cde3bfcde2b",
+            measurementId: "G-73VBEQ32GT",
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // STATE
+        let allEvents = [];
+        let activeFilter = 'All';
+        let currentUserRole = 'student';
+
+        // --- AUTH & LISTENER ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // Get Role
+                const uDoc = await getDoc(doc(db, 'users', user.uid));
+                if (uDoc.exists()) currentUserRole = uDoc.data().role || 'student';
+                
+                // Show Add Button if Operator
+                if (currentUserRole === 'operator') {
+                    document.getElementById('add-event-btn').style.display = 'flex';
+                }
+            } else {
+                currentUserRole = 'guest';
+                document.getElementById('add-event-btn').style.display = 'none';
+            }
+        });
+
+        // Listen for Events (Real-time)
+        // Using 'global_events' collection to match your previous code
+        const q = query(collection(db, "global_events"), orderBy("date", "asc"));
+        onSnapshot(q, (snapshot) => {
+            allEvents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderEvents();
+        });
+
+        // --- UI FUNCTIONS ---
+        
+        // Render Filters
+        const filters = ['All', 'Tech', 'Cultural', 'Sports', 'Academic'];
+        const filterContainer = document.getElementById('filter-container');
+        filterContainer.innerHTML = `<i data-lucide="filter" style="color: #9ca3af; width: 16px;"></i>`;
+        
+        filters.forEach(filter => {
+            const btn = document.createElement('button');
+            btn.className = `filter-btn ${filter === 'All' ? 'active' : ''}`;
+            btn.textContent = filter;
+            btn.onclick = (e) => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                activeFilter = filter;
+                renderEvents();
+            };
+            filterContainer.appendChild(btn);
+        });
+
+        // Render Grid
+        function renderEvents() {
+            const grid = document.getElementById('events-grid');
+            const emptyState = document.getElementById('empty-state');
+            grid.innerHTML = '';
+            
+            // Filter Logic
+            // Note: In your old code you used 'category', ensure consistency
+            const filtered = activeFilter === 'All' 
+                ? allEvents 
+                : allEvents.filter(e => (e.category || e.eventType) === activeFilter);
+            
+            if (filtered.length === 0) {
+                emptyState.classList.add('visible');
+            } else {
+                emptyState.classList.remove('visible');
+                filtered.forEach(evt => {
+                    const card = document.createElement('div');
+                    card.className = "event-card";
+                    
+                    // Fallback Image logic
+                    const imgSrc = evt.image || "https://plus.unsplash.com/premium_photo-1763727434849-058424c7efae?q=80&w=1455&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
+                    
+                    // Delete Button (Only for Operator)
+                    let deleteHtml = '';
+                    if (currentUserRole === 'operator') {
+                        deleteHtml = `<button class="delete-card-btn" style="display:flex" onclick="deleteEvent(event, '${evt.id}')"><i data-lucide="trash-2" style="width:14px"></i></button>`;
+                    }
+
+                    // Card HTML
+                    card.innerHTML = `
+                        ${deleteHtml}
+                        <div class="card-image" onclick="openViewModal('${evt.id}')">
+                            <img src="${imgSrc}" loading="lazy">
+                            <div class="card-overlay">
+                                <i data-lucide="calendar" style="width:12px;"></i> ${evt.date}
+                            </div>
+                        </div>
+                        <div class="card-content" onclick="openViewModal('${evt.id}')">
+                            <h3 class="card-title">${evt.name || evt.title}</h3>
+                            <div class="card-loc">${evt.location || 'Campus'}</div>
+                            <span class="card-tag">${evt.category || evt.eventType}</span>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            }
             lucide.createIcons();
         }
 
-        // --- 5. OPERATOR FUNCTIONS ---
-        async function handlePublish(e) {
-            e.preventDefault();
-            const btn = document.getElementById('submit-btn');
-            btn.innerText = "Saving...";
-            btn.disabled = true;
+        // --- ACTIONS ---
 
+        // Add Event
+        window.openAddModal = () => document.getElementById('add-modal').classList.add('active');
+        
+        document.getElementById('add-event-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.innerText = "Publishing...";
+            
             try {
-                await db.collection('global_events').add({
-                    name: document.getElementById('e-name').value,
-                    eventType: document.getElementById('e-type').value,
-                    date: document.getElementById('e-date').value,
-                    time: document.getElementById('e-time').value,
-                    registrationLink: document.getElementById('e-link').value,
-                    description: document.getElementById('e-desc').value,
-                    showCountdown: document.getElementById('e-countdown').checked,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                await addDoc(collection(db, "global_events"), {
+                    name: document.getElementById('add-title').value,
+                    date: document.getElementById('add-date').value,
+                    time: document.getElementById('add-time').value,
+                    location: document.getElementById('add-location').value,
+                    category: document.getElementById('add-club').value,
+                    registrationLink: document.getElementById('add-link').value,
+                    image: document.getElementById('add-image').value,
+                    description: document.getElementById('add-desc').value,
+                    createdAt: serverTimestamp()
                 });
                 
-                closeModal();
                 e.target.reset();
-            } catch(err) {
+                window.closeModal('add-modal');
+            } catch (err) {
                 alert("Error: " + err.message);
             } finally {
                 btn.innerText = "Publish Event";
-                btn.disabled = false;
             }
-        }
+        };
 
-        async function deleteEvent(id) {
-            if(confirm("Delete this event?")) {
-                await db.collection('global_events').doc(id).delete();
+        // View Event
+        window.openViewModal = (id) => {
+            const evt = allEvents.find(e => e.id === id);
+            if(!evt) return;
+
+            document.getElementById('modal-image').src = evt.image || "https://plus.unsplash.com/premium_photo-1763727434849-058424c7efae?q=80&w=1455&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
+            document.getElementById('modal-category').innerText = evt.category || evt.eventType;
+            document.getElementById('modal-title').innerText = evt.name || evt.title;
+            document.getElementById('modal-date').innerText = evt.date;
+            document.getElementById('modal-time').innerText = evt.time || '';
+            document.getElementById('modal-location').innerText = evt.location || 'TBA';
+            document.getElementById('modal-description').innerText = evt.description || 'No description provided.';
+            
+            const linkBtn = document.getElementById('modal-register-btn');
+            if(evt.registrationLink) {
+                linkBtn.href = evt.registrationLink;
+                linkBtn.style.display = 'flex';
+            } else {
+                linkBtn.style.display = 'none';
             }
-        }
 
-        // --- 6. UTILS ---
-        function openModal() { document.getElementById('event-modal').style.display = 'flex'; }
-        function closeModal() { document.getElementById('event-modal').style.display = 'none'; }
+            document.getElementById('event-modal').classList.add('active');
+            lucide.createIcons();
+        };
 
-        // Initial Icons
+        // Delete Event
+        window.deleteEvent = async (e, id) => {
+            e.stopPropagation(); // Prevent opening modal
+            if(confirm("Are you sure you want to delete this event?")) {
+                await deleteDoc(doc(db, "global_events", id));
+            }
+        };
+
+        // Helper
+        window.closeModal = (id) => document.getElementById(id).classList.remove('active');
+        
+        // Initial Icon Load
         lucide.createIcons();
     </script>
 </body>

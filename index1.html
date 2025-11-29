@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SC Portal | Student Companion</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+      /* Base Styling */
+      body {
+        background-color: #f8f8f8; /* Very light gray background */
+        font-family: "Inter", sans-serif;
+      }
+
+      /* Modal specific style */
+      .modal-content-area {
+        max-height: 80vh;
+        overflow-y: auto;
+      }
+
+      /* --- Blinking Dot Animation --- */
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.2;
+        }
+      }
+
+      .live-dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        background-color: #ef4444; /* red-500 */
+        border-radius: 50%;
+        animation: pulse 1.5s infinite;
+        margin-left: 4px;
+      }
+
+      /* --- Continuous Marquee Animations --- */
+
+      /* Global Pulse (Leftward movement) */
+      @keyframes marquee {
+        0% {
+          transform: translateX(0);
+        }
+        100% {
+          transform: translateX(-50%);
+        }
+      }
+
+      .marquee-track {
+        display: flex;
+        width: max-content;
+        animation: marquee 40s linear infinite;
+      }
+
+      /* Pause animation on hover */
+      .marquee-container:hover .marquee-track {
+        animation-play-state: paused;
+      }
+
+      /* --- Responsive 16:9 Video Container --- */
+      .video-container {
+        position: relative;
+        /* 16:9 aspect ratio (9 / 16 * 100 = 56.25%) */
+        padding-bottom: 56.25%;
+        height: 0;
+        overflow: hidden;
+        background-color: #1f2937; /* Dark background for video area */
+      }
+      .video-container iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body class="font-sans text-gray-900">
+    <header
+      class="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm"
+    >
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between"
+      >
+        <div class="flex items-center space-x-6">
+          <a
+            href="#"
+            class="flex items-center space-x-2 text-indigo-600 font-bold text-lg"
+          >
+            <i data-lucide="graduation-cap" class="w-7 h-7"></i>
+            <span>SC Portal</span>
+          </a>
+
+          <nav
+            class="hidden sm:flex items-center space-x-4 text-sm font-medium"
+          >
+            <a
+              href="#"
+              class="text-indigo-600 border-b-2 border-indigo-600 pb-1"
+              >Home</a
+            >
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="space-y-10">
+        <section>
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-2xl font-bold text-gray-800">Global Pulse</h2>
+            <span class="text-sm text-gray-500 flex items-center">
+              Live Updates
+              <span class="live-dot"></span>
+            </span>
+          </div>
+          <br>
+        
+
+          <div
+            id="global-pulse-container"
+            class="marquee-container overflow-hidden relative w-full"
+          ></div>
+        </section>
+
+        <section>
+          <h2 class="text-2xl font-bold text-gray-800 flex items-center mb-4">
+            <i data-lucide="youtube" class="w-6 h-6 mr-2 text-red-600"></i>
+            Vedam Tech Featured Videos
+          </h2>
+          <br>
+          <br>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div
+              class="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-200"
+            >
+              <div class="video-container">
+                <iframe
+                  width="560"
+                  height="315"
+                  src="https://www.youtube.com/embed/eoMhcdstM8s?si=HyfkkVJOaXeXx0pc"
+                  title="YouTube video player"
+                  frameborder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  referrerpolicy="strict-origin-when-cross-origin"
+                  allowfullscreen
+                ></iframe>
+              </div>
+            </div>
+
+            <div
+              class="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-200"
+            >
+              <div class="video-container">
+                <iframe
+                  width="560"
+                  height="315"
+                  src="https://www.youtube.com/embed/btyUEzHTEVg?si=Se84g51yzkANnAUs"
+                  title="YouTube video player"
+                  frameborder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  referrerpolicy="strict-origin-when-cross-origin"
+                  allowfullscreen
+                ></iframe>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section>
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+              <i data-lucide="award" class="w-6 h-6 mr-2 text-red-500"></i>
+              Campus Chronicles
+            </h2>
+            <span class="text-sm text-gray-500">Official Blog</span>
+          </div>
+
+          <div
+            id="campus-chronicles-container"
+            class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
+          ></div>
+        </section>
+
+        <section class="text-center mt-12 pt-8 border-t border-gray-200">
+          <h3 class="text-lg font-bold text-gray-800 mb-6">Connect with Us</h3>
+
+          <div class="flex flex-wrap justify-center gap-8">
+            <a
+              href="https://www.instagram.com/vedamschooloftech_official/"
+              target="_blank"
+              class="text-pink-600 hover:text-pink-700 transition-colors transform hover:scale-110 duration-200"
+              aria-label="Instagram"
+            >
+              <i data-lucide="instagram" class="w-8 h-8"></i>
+            </a>
+
+            <a
+              href="https://www.linkedin.com/search/results/all/?fetchDeterministicClustersOnly=true&heroEntityKey=urn%3Ali%3Aorganization%3A105923302&keywords=vedam%20school%20of%20technology&origin=RICH_QUERY_TYPEAHEAD_HISTORY&position=1&searchId=222d044a-8354-44ce-b970-fedc63991020&sid=j5j&spellCorrectionEnabled=true"
+              target="_blank"
+              class="text-blue-700 hover:text-blue-800 transition-colors transform hover:scale-110 duration-200"
+              aria-label="LinkedIn"
+            >
+              <i data-lucide="linkedin" class="w-8 h-8"></i>
+            </a>
+
+            <a
+              href="https://x.com/vedamschooltech/status/1927369901909409990"
+              target="_blank"
+              class="text-gray-800 hover:text-black transition-colors transform hover:scale-110 duration-200"
+              aria-label="Twitter"
+            >
+              <i data-lucide="twitter" class="w-8 h-8"></i>
+            </a>
+
+            <a
+              href="https://www.youtube.com/@VedamSchoolofTech_Official"
+              target="_blank"
+              class="text-red-600 hover:text-red-700 transition-colors transform hover:scale-110 duration-200"
+              aria-label="YouTube"
+            >
+              <i data-lucide="youtube" class="w-8 h-8"></i>
+            </a>
+
+            <a
+              href="https://www.facebook.com/p/Vedam-School-of-Technology-61572359172260/"
+              target="_blank"
+              class="text-blue-600 hover:text-blue-700 transition-colors transform hover:scale-110 duration-200"
+              aria-label="Facebook"
+            >
+              <i data-lucide="facebook" class="w-8 h-8"></i>
+            </a>
+
+            <a
+              href="https://www.quora.com/profile/Vedam-8"
+              target="_blank"
+              class="text-red-700 hover:text-red-800 transition-colors transform hover:scale-110 duration-200"
+              aria-label="Quora"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="32"
+                height="32"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="w-8 h-8"
+              >
+                <path
+                  d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm-1 2h2v-3h-1a4 4 0 1 1 0-8 4 4 0 0 1 0 8h-1v3z"
+                />
+                <path d="M12 16v-2" />
+              </svg>
+            </a>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <div
+      id="news-modal"
+      class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+    >
+      <div
+        class="bg-white rounded-xl shadow-2xl w-full max-w-2xl transform transition-all"
+      >
+        <div class="modal-content-area p-6 flex flex-col">
+          <div class="flex justify-between items-start mb-4">
+            <h2
+              id="modal-title"
+              class="text-2xl font-bold text-gray-900 leading-tight pr-10"
+            >
+              Modal Title
+            </h2>
+            <button
+              onclick="closeModal()"
+              class="p-1 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+            >
+              <i data-lucide="x" class="w-5 h-5 text-gray-600"></i>
+            </button>
+          </div>
+
+          <img
+            id="modal-image"
+            src=""
+            onerror="this.onerror=null; this.src='https://placehold.co/600x200/e5e7eb/374151?text=Image+Loading+Error';"
+            alt="News Image"
+            class="w-full h-48 object-cover rounded-lg mb-4 bg-gray-200"
+          />
+
+          <div class="flex items-center text-sm text-gray-500 mb-4 space-x-3">
+            <span
+              id="modal-source"
+              class="font-semibold text-indigo-600"
+            ></span>
+            <span>•</span>
+            <span id="modal-time"></span>
+          </div>
+
+          <p
+            id="modal-content"
+            class="text-gray-700 text-base leading-relaxed mb-6"
+          ></p>
+
+          <a
+            id="modal-read-more"
+            href="#"
+            target="_blank"
+            class="inline-flex items-center text-sm font-bold text-white bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg transition-colors self-start"
+          >
+            Read Full Article
+            <i data-lucide="external-link" class="w-4 h-4 ml-2"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // --- Data ---
+
+      const GLOBAL_PULSE_DATA = [
+        {
+          id: 1,
+          title: "AI Revolution in EdTech",
+          source: "USD Online Degrees",
+          time: "2h ago",
+          image:
+            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdXMvR5qmp6UJXtX2xx3ZLXOVk_emUBoHtwCNyzp53L8H1st_PNC_ktjMYkCdWjLcV3XI&usqp=CAU",
+          summary:
+            "The integration of advanced AI models is rapidly changing how education is delivered, offering personalized learning paths, automated grading systems, and improved accessibility.",
+          link: "https://onlinedegrees.sandiego.edu/artificial-intelligence-education/",
+        },
+        {
+          id: 2,
+          title: "New Python Version Released",
+          source: "RealPython",
+          time: "5h ago",
+          image:
+            "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&q=80&w=300",
+          summary:
+            "Python 3.12 brings new performance improvements, clearer error messages, and powerful f-strings. Essential update for all CSE students!",
+          link: "https://realpython.com/python312-new-features/",
+        },
+        {
+          id: 3,
+          title: "SpaceX Launches Starship",
+          source: "Teslarati",
+          time: "8h ago",
+          image:
+            "https://images.newscientist.com/wp-content/uploads/2025/08/27135853/SEI_263490562.jpg",
+          summary:
+            "SpaceX is pushing forward with its next-generation Starship V3 vehicle, targeting heavy flight activity next year. Engineers are collecting crucial data from tests.",
+          link: "https://www.teslarati.com/spacex-starship-fl-launch-site-witness-scenes-sci-fi-films/",
+        },
+        {
+          id: 4,
+          title: "Cybersecurity Trends 2026",
+          source: "Simplilearn",
+          time: "1d ago",
+          image:
+            "https://www.hostnoc.com/wp-content/uploads/2025/09/thumbnail.jpg",
+          summary:
+            "Experts predict a rise in AI-driven social engineering and a greater focus on Zero Trust architecture in enterprise security next year.",
+          link: "https://www.simplilearn.com/top-cybersecurity-trends-article",
+        },
+      ];
+
+      const CAMPUS_CHRONICLES_DATA = [
+        {
+          id: 5,
+          title: "Top 5 Coding Hacks",
+          summary:
+            "Boost your productivity with these VS Code extensions and workflow tips shared by our senior developers in the Tech Club.",
+          source: "Tech Club",
+          time: "2 days ago",
+          image:
+            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR9KZ8tcFmJvZE_DarG8OnLBQ_UGNYZ7gEEcxi9ZT7xxdBs4RcbU4H5VJEWQO8uYhOlEN4&usqp=CAU",
+          link: "https://blog.codingblocks.com/",
+        },
+        {
+          id: 6,
+          title: "Campus Fest Highlights",
+          summary:
+            "The music night was a blast! Check out the gallery of photos and videos captured by the Media Team from all the cultural and sporting events.",
+          source: "Media Team",
+          time: "1 week ago",
+          image:
+            "https://res.cloudinary.com/purnesh/image/upload/f_auto/v1486462211/hansraj-college%2Cjpg00.jpg",
+          link: "https://www.gettyimages.in/photos/college-festival",
+        },
+        // Adding a few more mock articles for better newspaper visual effect
+        {
+          id: 7,
+          title: "Scholarship Deadline Alert",
+          summary:
+            "The application window for the Merit-Based Scholarship closes next Friday. Ensure all your documents are uploaded to the portal.",
+          source: "Admissions Office",
+          time: "3 days ago",
+          image:
+            "https://placehold.co/600x400/805ad5/ffffff?text=Scholarship+News",
+          link: "#",
+        },
+        {
+          id: 8,
+          title: "Library E-Book Expansion",
+          summary:
+            "The central library has added 500 new technical eBooks to the online catalogue. Access them via your student ID.",
+          source: "Library Services",
+          time: "4 days ago",
+          image:
+            "https://placehold.co/600x400/4299e1/ffffff?text=Library+Update",
+          link: "#",
+        },
+      ];
+
+      // --- Render Functions ---
+
+      function createSlideHTML(item) {
+        return `
+                <div onclick="openModal(${item.id}, 'global')" 
+                    class="flex-shrink-0 w-[304px] bg-white rounded-xl shadow-md overflow-hidden cursor-pointer mr-6 border border-gray-100">
+                    <div class="relative h-32 bg-gray-200" style="background-image: url('${item.image}'); background-size: cover; background-position: center;">
+                        <div class="absolute inset-0 bg-black/20"></div>
+                    </div>
+                    <div class="p-3">
+                        <h3 class="font-bold text-gray-900 line-clamp-2 leading-tight">${item.title}</h3>
+                        <div class="flex justify-between text-xs text-gray-500 mt-1">
+                            <span>${item.source}</span>
+                            <span>${item.time}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+      }
+
+      function renderGlobalPulse() {
+        const container = document.getElementById("global-pulse-container");
+
+        const originalItems = GLOBAL_PULSE_DATA.map((item) =>
+          createSlideHTML(item)
+        ).join("");
+
+        const track = document.createElement("div");
+        track.className = "marquee-track py-2";
+
+        track.innerHTML = originalItems + originalItems;
+
+        container.innerHTML = "";
+        container.appendChild(track);
+      }
+
+      function renderCampusChronicles() {
+        const container = document.getElementById(
+          "campus-chronicles-container"
+        );
+
+        // New template for a newspaper/blog card with image and a clear border
+        container.innerHTML = CAMPUS_CHRONICLES_DATA.map(
+          (item) => `
+                <div onclick="openModal(${item.id}, 'campus')" 
+                    class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 transition-shadow hover:shadow-lg flex flex-col cursor-pointer">
+                    
+                    <div class="w-full h-32 mb-3 rounded-md overflow-hidden bg-gray-100">
+                        <img src="${item.image}" 
+                            onerror="this.onerror=null; this.src='https://placehold.co/400x300/e5e7eb/374151?text=Campus';" 
+                            alt="${item.title}" 
+                            class="w-full h-full object-cover">
+                    </div>
+
+                    <div class="flex flex-col flex-grow">
+                        <h3 class="text-lg font-extrabold text-gray-900 mb-1 leading-snug">${item.title}</h3>
+                        <p class="text-xs text-gray-700 mb-3 line-clamp-3">${item.summary}</p>
+                    </div>
+
+                    <div class="flex justify-between items-center text-xs text-gray-500 pt-2 border-t border-gray-100">
+                        <span class="font-medium text-indigo-600">${item.source}</span>
+                        <span>${item.time}</span>
+                    </div>
+                </div>
+            `
+        ).join("");
+      }
+
+      // --- News Modal Logic (Articles) ---
+
+      function openModal(id, type) {
+        let newsItem;
+        newsItem = [...GLOBAL_PULSE_DATA, ...CAMPUS_CHRONICLES_DATA].find(
+          (item) => item.id === id
+        );
+
+        if (!newsItem) return;
+
+        document.getElementById("modal-title").textContent = newsItem.title;
+        document.getElementById("modal-image").src = newsItem.image;
+        document.getElementById(
+          "modal-source"
+        ).textContent = `Source: ${newsItem.source}`;
+        document.getElementById("modal-time").textContent = newsItem.time;
+        document.getElementById("modal-content").textContent = newsItem.summary;
+        document.getElementById("modal-read-more").href = newsItem.link;
+
+        document.getElementById("news-modal").classList.remove("hidden");
+        lucide.createIcons();
+      }
+
+      function closeModal() {
+        document.getElementById("news-modal").classList.add("hidden");
+      }
+
+      // Close modal on outside click
+      document
+        .getElementById("news-modal")
+        .addEventListener("click", function (e) {
+          if (e.target === this) {
+            closeModal();
+          }
+        });
+
+      // --- Initialization ---
+      document.addEventListener("DOMContentLoaded", () => {
+        renderGlobalPulse();
+        renderCampusChronicles();
+        lucide.createIcons();
+      });
+    </script>
+  </body>
+</html>

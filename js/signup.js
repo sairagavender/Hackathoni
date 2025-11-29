@@ -1,73 +1,88 @@
-  const displayNameEl = document.getElementById('displayName');
-  const emailEl = document.getElementById('email');
-  const passwordEl = document.getElementById('password');
-  const roleEl = document.getElementById('role');
-  const signupBtn = document.getElementById('signupBtn');
-  const loginBtn = document.getElementById('loginBtn');
-  const googleBtn = document.getElementById('googleBtn');
-  const statusEl = document.getElementById('status');
+const formTitle = document.getElementById('formTitle');
+const signupFields = document.getElementById('signupFields');
+const displayNameEl = document.getElementById('displayName');
+const roleEl = document.getElementById('role');
+const emailEl = document.getElementById('email');
+const passwordEl = document.getElementById('password');
+const mainBtn = document.getElementById('mainBtn');
+const toggleBtn = document.getElementById('toggleBtn');
+const toggleLabel = document.getElementById('toggleLabel');
+const statusEl = document.getElementById('status');
 
-  // Signup
-  signupBtn.onclick = async () => {
+// State: Default is Login
+let isLoginMode = true;
+
+// 1. Toggle Function
+toggleBtn.onclick = () => {
+    isLoginMode = !isLoginMode; // Switch state
+
+    if (isLoginMode) {
+        // Switch to Login UI
+        formTitle.innerText = "Welcome Back";
+        signupFields.classList.add('hidden'); // Hide Name/Role
+        mainBtn.innerText = "Log In";
+        toggleLabel.innerText = "New here?";
+        toggleBtn.innerText = "Create an account";
+    } else {
+        // Switch to Sign Up UI
+        formTitle.innerText = "Create Account";
+        signupFields.classList.remove('hidden'); // Show Name/Role
+        mainBtn.innerText = "Sign Up";
+        toggleLabel.innerText = "Already have an account?";
+        toggleBtn.innerText = "Log in instead";
+    }
+    statusEl.innerText = ""; // Clear errors
+};
+
+// 2. Main Submit Logic
+mainBtn.onclick = async () => {
     const email = emailEl.value.trim();
-    const pass = passwordEl.value;
-    const role = roleEl.value;
-    let username = displayNameEl.value.trim() || (email ? email.split('@')[0] : '');
+    const password = passwordEl.value;
+    statusEl.className = 'status'; // Reset color
+    statusEl.innerText = 'Processing...';
 
-    if(!email || !pass) { statusEl.innerText='Enter email & password'; return; }
+    if (!email || !password) {
+        setStatus('Please enter email and password.', true);
+        return;
+    }
 
     try {
-      const res = await auth.createUserWithEmailAndPassword(email, pass);
-      await db.collection('users').doc(res.user.uid).set({
-        email,
-        username,
-        role,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      statusEl.innerText='Signed up! Redirecting...';
-      setTimeout(()=>location.href='index.html',800);
-    } catch(e) {
-      statusEl.innerText='Error: ' + e.message;
+        if (isLoginMode) {
+            // --- LOGIN LOGIC ---
+            await auth.signInWithEmailAndPassword(email, password);
+            setStatus('Login successful! Redirecting...', false);
+            setTimeout(() => location.href = 'index.html', 800);
+        } else {
+            // --- SIGN UP LOGIC ---
+            const name = displayNameEl.value.trim();
+            const role = roleEl.value;
+
+            if (!name) {
+                setStatus('Display name is required for signup.', true);
+                return;
+            }
+
+            // Create Auth User
+            const res = await auth.createUserWithEmailAndPassword(email, password);
+            
+            // Save extra data to Firestore
+            await db.collection('users').doc(res.user.uid).set({
+                email: email,
+                username: name,
+                role: role,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            setStatus('Account created! Redirecting...', false);
+            setTimeout(() => location.href = 'index.html', 800);
+        }
+    } catch (e) {
+        setStatus(e.message, true);
     }
-  };
+};
 
-  // Login
-  loginBtn.onclick = async () => {
-    const email = emailEl.value.trim();
-    const pass = passwordEl.value;
-
-    if(!email || !pass) { statusEl.innerText='Enter email & password'; return; }
-
-    try {
-      await auth.signInWithEmailAndPassword(email, pass);
-      statusEl.innerText='Logged in! Redirecting...';
-      setTimeout(()=>location.href='index.html',500);
-    } catch(e) {
-      statusEl.innerText='Error: ' + e.message;
-    }
-  };
-
-  // Google sign-in (defaults to student unless edited manually later)
-  googleBtn.onclick = async () => {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    try {
-      const res = await auth.signInWithPopup(provider);
-      const uid = res.user.uid;
-      const doc = await db.collection('users').doc(uid).get();
-
-      if(!doc.exists){
-        const username = res.user.displayName || (res.user.email ? res.user.email.split('@')[0] : 'user');
-        await db.collection('users').doc(uid).set({
-          email: res.user.email,
-          username,
-          role: 'student', // google accounts default role
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      }
-
-      statusEl.innerText='Signed in. Redirecting...';
-      setTimeout(()=>location.href='index.html',500);
-    } catch(e){
-      statusEl.innerText='Error: ' + e.message;
-    }
-  };
+// Helper for status messages
+function setStatus(msg, isError) {
+    statusEl.innerText = msg;
+    statusEl.className = isError ? 'status error' : 'status success';
+}
