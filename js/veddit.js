@@ -1,15 +1,78 @@
+
   // --- Global State ---
   let currentUser = null;
   let cachedQuestions = []; 
-  let currentThreadId = null; // ID of the Question
+  let currentThreadId = null;
   let activeUnsubscribe = null;
   
   // Threading logic
-  let allRepliesFlat = []; // Store raw replies to filter for focus mode
-  let replyParentId = null; // For composing new reply
-  let focusedCommentId = null; // If set, we only show this comment tree
+  let allRepliesFlat = []; 
+  let replyParentId = null;
+  let focusedCommentId = null; 
 
-  // --- Auth & Init ---
+  // --- AI MODERATION ENGINE (Gemini 1.5 Flash) ---
+  const GEMINI_API_KEY = "PASTE_YOUR_GEMINI_API_KEY_HERE"; 
+  
+  async function checkContentSafety(text) {
+      if(!text) return true;
+      
+      // FIX 1: Updated Model Name to 'gemini-1.5-flash-latest' which is more stable
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`;
+      
+      const prompt = `
+        Classify this text into one of two categories: "SAFE" or "UNSAFE".
+        
+        "UNSAFE" includes:
+        - Explicit sexual content or erotica
+        - Severe violence or gore
+        - Hate speech or harassment
+        - Self-harm promotion
+        
+        Text: "${text}"
+        
+        Reply with ONLY the word "SAFE" or "UNSAFE".
+      `;
+
+      try {
+          const response = await fetch(url, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+          });
+
+          const data = await response.json();
+          
+          // FIX 2: Handle API Errors (like 404) by BLOCKING instead of allowing
+          if(data.error) {
+              console.error("Gemini API Error:", data.error);
+              return `AI Error: model didnt find this post safe`; 
+          }
+
+          // FIX 3: Check for Safety Filters (Google's internal block)
+          if (data.promptFeedback && data.promptFeedback.blockReason) {
+              return `Blocked by AI Safety Filters: ${data.promptFeedback.blockReason}`;
+          }
+
+          if (!data.candidates || data.candidates.length === 0) {
+              return "Blocked: Content deemed too unsafe to process.";
+          }
+
+          const result = data.candidates[0].content.parts[0].text.trim().toUpperCase();
+
+          if (result.includes("SAFE") && !result.includes("UNSAFE")) {
+              return true;
+          } else {
+              return "Flagged as UNSAFE by AI.";
+          }
+
+      } catch (e) {
+          console.error("Network Error", e);
+          // FIX 4: Block post if network fails
+          return "AI Connection Failed. Cannot verify safety."; 
+      }
+  }
+
+  // --- Auth ---
   auth.onAuthStateChanged(async user => {
     if(user){
       const doc = await db.collection('users').doc(user.uid).get();
@@ -43,9 +106,24 @@
     const body = document.getElementById('qBody').value.trim();
     const tag = document.getElementById('qTag').value.trim() || 'General';
     const anon = document.getElementById('qAnon').checked;
+    const statusEl = document.getElementById('postStatus');
     
     if(!title && !body) return;
-    document.getElementById('postStatus').innerText = "Publishing...";
+    
+    // AI CHECK
+    statusEl.innerText = "AI is scanning content...";
+    statusEl.className = "small";
+    
+    const safetyResult = await checkContentSafety(title + " " + body);
+    
+    // If result is ANYTHING other than true, it is an error message -> BLOCK IT
+    if(safetyResult !== true) {
+        statusEl.innerText = "⚠️ " + safetyResult;
+        statusEl.className = "small ai-error";
+        return; // STOP HERE
+    }
+
+    statusEl.innerText = "Publishing...";
 
     try {
       await db.collection('questions').add({
@@ -55,7 +133,7 @@
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         likes: 0, dislikes: 0
       });
-      document.getElementById('postStatus').innerText = "Success!";
+      statusEl.innerText = "Success!";
       setTimeout(() => togglePostCreator(false), 800);
     } catch(e) { alert(e.message); }
   };
@@ -85,7 +163,7 @@
         <div style="color:#374151; line-height:1.5; font-size:14px;">${escapeHtml(q.body)}</div>
         <div class="row space-between" style="margin-top:12px;">
            <div class="votes">
-             <span class="vote-arrow" id="up-${q.id}">⬆</span> <span style="font-size:13px;font-weight:bold;margin:0 4px">${(q.likes||0) - (q.dislikes||0)}</span> <span class="vote-arrow" id="down-${q.id}">⬇</span>
+             <span class="vote-arrow" style="cursor:pointer" id="up-${q.id}">⬆</span> <span style="font-size:13px;font-weight:bold;margin:0 4px">${(q.likes||0) - (q.dislikes||0)}</span> <span class="vote-arrow" style="cursor:pointer" id="down-${q.id}">⬇</span>
            </div>
            <button class="ghost small" id="reply-${q.id}">💬 Comments</button>
         </div>
@@ -99,31 +177,26 @@
     });
   }
 
-  // --- Threading System (Robust DOM Version) ---
+  // --- Threading System ---
 
   function openThread(qid, qData){
     currentThreadId = qid;
     focusedCommentId = null;
     allRepliesFlat = [];
     
-    // UI Reset
     document.getElementById('replyModal').classList.remove('hidden');
     document.getElementById('focusBar').style.display = 'none';
     document.getElementById('threadContext').style.display = 'block';
     document.getElementById('focusedParentContext').style.display = 'none';
     cancelReplyTarget(); 
 
-    // Render Main Post Context
     document.getElementById('threadContext').innerHTML = `
       <h3 style="margin:0 0 10px 0">${escapeHtml(qData.title)}</h3>
       <p style="font-size:14px; line-height:1.5;">${escapeHtml(qData.body)}</p>
       <div class="small" style="margin-top:10px;color:#888">Posted by ${escapeHtml(qData.authorName)}</div>
     `;
 
-    // Listen for replies
     if(activeUnsubscribe) activeUnsubscribe();
-    
-    // Fetch all replies for this post
     activeUnsubscribe = db.collection('questions').doc(qid).collection('replies')
       .orderBy('createdAt', 'asc')
       .onSnapshot(snap => {
@@ -134,11 +207,9 @@
 
   function refreshThreadView() {
       const container = document.getElementById('repliesContainer');
-      container.innerHTML = ''; // Clear previous
-      
+      container.innerHTML = ''; 
       let itemsToRender = allRepliesFlat;
       
-      // 1. Handle Focus Mode (Deep threads)
       if (focusedCommentId) {
           const focusedComment = allRepliesFlat.find(r => r.id === focusedCommentId);
           if (focusedComment) {
@@ -148,11 +219,8 @@
                   <div class="small" style="margin-bottom:5px; font-weight:bold;">Viewing single thread:</div>
                   <div style="background:#fff; padding:8px; border-radius:4px;">${escapeHtml(focusedComment.text)}</div>
               `;
-              
               document.getElementById('focusBar').style.display = 'flex';
               document.getElementById('threadContext').style.display = 'none';
-              
-              // Only get descendants
               itemsToRender = getAllDescendants(focusedCommentId, allRepliesFlat);
           }
       } else {
@@ -161,33 +229,22 @@
           document.getElementById('focusedParentContext').style.display = 'none';
       }
 
-      // 2. Build Tree
       const tree = buildTree(itemsToRender, focusedCommentId); 
-
-      // 3. Render Tree to DOM
       if(tree.length === 0 && !focusedCommentId) {
           container.innerHTML = '<div style="padding:20px; text-align:center; color:#999">No comments yet.</div>';
       } else {
-          tree.forEach(node => {
-              container.appendChild(createReplyNode(node, 0));
-          });
+          tree.forEach(node => container.appendChild(createReplyNode(node, 0)));
       }
   }
 
   function buildTree(items, rootId = null) {
       const rootItems = [];
       const lookup = {};
-      
-      // Initialize lookup
       items.forEach(item => lookup[item.id] = { ...item, children: [] });
-      
-      // Connect nodes
       items.forEach(item => {
-          // If item has a parent AND that parent is in the current set of items
           if (item.parentId && lookup[item.parentId]) {
               lookup[item.parentId].children.push(lookup[item.id]);
           } else {
-              // Otherwise treat as root (handles top-level OR orphans)
               rootItems.push(lookup[item.id]);
           }
       });
@@ -198,26 +255,20 @@
       let descendants = [];
       let children = allItems.filter(i => i.parentId === rootId);
       descendants = [...descendants, ...children];
-      children.forEach(child => {
-          descendants = [...descendants, ...getAllDescendants(child.id, allItems)];
-      });
+      children.forEach(child => { descendants = [...descendants, ...getAllDescendants(child.id, allItems)]; });
       return descendants;
   }
 
-  // --- Core Rendering Function (Direct DOM Creation) ---
   function createReplyNode(node, depth){
-      // 1. Create Wrapper
       const wrapper = document.createElement('div');
       wrapper.className = 'reply-node';
       
-      // 2. Logic: Max Depth Limit
       if (depth >= 4 && node.children.length > 0) {
           wrapper.innerHTML = `
             <div class="reply-content" style="padding:8px; background:#fff;">
                 <div class="reply-header"><b>${escapeHtml(node.authorName)}</b></div>
                 <div class="reply-body">${escapeHtml(node.text)}</div>
-            </div>
-          `;
+            </div>`;
           const contBtn = document.createElement('div');
           contBtn.className = 'continue-thread';
           contBtn.innerText = '➜ Continue this thread';
@@ -227,7 +278,6 @@
           return wrapper;
       }
 
-      // 3. Create Content Div
       const content = document.createElement('div');
       content.className = 'reply-content';
       
@@ -235,31 +285,24 @@
       const isOp = currentUser && currentUser.role === 'operator';
       const score = (node.likes||0) - (node.dislikes||0);
 
-      // Header
       const header = document.createElement('div');
       header.className = 'reply-header';
       header.innerHTML = `<b>${escapeHtml(node.authorName)}</b> <span>• ${timeStr}</span>`;
       content.appendChild(header);
 
-      // Body
       const body = document.createElement('div');
       body.className = 'reply-body';
-      body.innerText = node.text; // Using innerText handles safety automatically
+      body.innerText = node.text; 
       content.appendChild(body);
 
-      // Actions Row
       const actions = document.createElement('div');
       actions.className = 'reply-actions';
       
-      // Vote Up
       const up = document.createElement('span');
       up.className = 'action-link';
       up.innerText = `⬆ ${score}`;
       up.onclick = () => voteReply(node.id, 1);
       
-      // Vote Down
-      const down = document.createElement('span'); // Optional visual
-      // Reply Btn
       const rep = document.createElement('span');
       rep.className = 'action-link';
       rep.innerText = 'Reply';
@@ -279,14 +322,11 @@
       content.appendChild(actions);
       wrapper.appendChild(content);
 
-      // 4. Create Children Container
       const childContainer = document.createElement('div');
       childContainer.className = 'thread-children';
       
       if(node.children && node.children.length > 0){
-          node.children.forEach(child => {
-              childContainer.appendChild(createReplyNode(child, depth + 1));
-          });
+          node.children.forEach(child => childContainer.appendChild(createReplyNode(child, depth + 1)));
       } else {
           childContainer.style.display = 'none';
       }
@@ -295,12 +335,10 @@
       return wrapper;
   }
 
-  // --- Interaction Logic ---
-  
   window.focusOnThread = function(commentId) {
       focusedCommentId = commentId;
       refreshThreadView();
-      document.querySelector('.modal .card').scrollTop = 0; // Fix scroll
+      document.querySelector('.modal-scroll').scrollTop = 0;
   }
 
   window.resetToFullThread = function() {
@@ -324,9 +362,27 @@
     if(!currentUser) return alert("Sign in to reply.");
     const text = document.getElementById('replyInput').value.trim();
     const anon = document.getElementById('replyAnon').checked;
+    const statusEl = document.getElementById('replyStatus');
     
     if(!text) return;
     
+    // AI CHECK FOR REPLY
+    if(statusEl) {
+        statusEl.innerText = "AI scanning...";
+        statusEl.className = "small";
+    }
+    
+    const safetyResult = await checkContentSafety(text);
+    if(safetyResult !== true) {
+        if(statusEl) {
+            statusEl.innerText = "⚠️ " + safetyResult;
+            statusEl.className = "small ai-error";
+        } else {
+            alert(safetyResult);
+        }
+        return; 
+    }
+
     document.getElementById('sendReplyBtn').innerText = "...";
     
     try {
@@ -339,6 +395,7 @@
           parentId: replyParentId
         });
         document.getElementById('replyInput').value = "";
+        if(statusEl) statusEl.innerText = "";
         cancelReplyTarget();
     } catch(e) {
         alert("Error: " + e.message);
@@ -351,6 +408,7 @@
     if(activeUnsubscribe) activeUnsubscribe();
     currentThreadId = null;
   }
+
   // --- Voting Utils ---
   async function vote(docId, col, val){
      if(!currentUser) return alert("Sign in");
@@ -370,7 +428,6 @@
   }
 
   async function voteReply(rid, val){
-     // Simplified vote for nested reply (same logic)
      if(!currentUser) return alert("Sign in");
      const ref = db.collection('questions').doc(currentThreadId).collection('replies').doc(rid);
      const vRef = ref.collection('votes').doc(currentUser.uid);

@@ -412,50 +412,88 @@ function updateTimetableUI() {
 window.handleEventSubmit = async function (e) {
   e.preventDefault();
   if (userRole !== "operator") return;
+  
   const f = e.target;
-  await addDoc(collection(db, EVENTS_COLLECTION), {
-    eventType: f["event-type"].value,
-    name: f["event-name"].value,
-    date: f["event-date"].value,
-    time: f["event-time"].value,
-    posterUrl: f["event-poster-url"].value,
-    description: f["event-description"].value,
-    showCountdown: f["show-countdown"].checked,
-    createdAt: serverTimestamp(),
-  });
-  f.reset();
-  switchView("dashboard");
+  const submitBtn = f.querySelector('button[type="submit"]');
+  submitBtn.disabled = true;
+  submitBtn.innerText = "Saving...";
+
+  try {
+      await addDoc(collection(db, EVENTS_COLLECTION), {
+        eventType: f["event-type"].value,
+        name: f["event-name"].value,
+        date: f["event-date"].value,
+        time: f["event-time"].value,
+        // CHANGED: Now saving registrationLink instead of posterUrl
+        registrationLink: f["event-link"].value, 
+        description: f["event-description"].value,
+        showCountdown: f["show-countdown"].checked,
+        createdAt: serverTimestamp(),
+      });
+      
+      f.reset();
+      // Reset default checkbox state
+      f.querySelector('#show-countdown').checked = true;
+      switchView("dashboard");
+  } catch(err) {
+      alert("Error saving event: " + err.message);
+  } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerText = "Save Event";
+  }
 };
 
 function renderUpcomingEvents(events) {
   const container = document.getElementById("upcoming-events");
-  container.innerHTML = events.length
-    ? ""
-    : '<p class="text-gray-500 italic">No events.</p>';
+  
+  if (events.length === 0) {
+      container.innerHTML = '<p class="text-gray-500 italic text-sm p-2">No upcoming events found.</p>';
+      return;
+  }
+
+  container.innerHTML = ""; // Clear list
+
   events.forEach((e) => {
     const d = new Date(e.date);
-    const diff = Math.ceil((d - new Date()) / 86400000);
-    const cd =
-      e.showCountdown && diff >= 0
-        ? `<span class="text-xs bg-pink-100 text-pink-600 px-2 rounded">${diff} days left</span>`
-        : "";
+    const diff = Math.ceil((d - new Date()) / 86400000); // Days difference
+    
+    // Countdown Badge logic
+    let statusBadge = "";
+    if (e.showCountdown) {
+        if (diff < 0) statusBadge = `<span class="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded">Ended</span>`;
+        else if (diff === 0) statusBadge = `<span class="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded font-bold">Today!</span>`;
+        else statusBadge = `<span class="text-[10px] bg-pink-100 text-pink-600 px-2 py-0.5 rounded">${diff} days left</span>`;
+    }
+
+    // Register Button Logic
+    const registerBtn = e.registrationLink 
+        ? `<a href="${e.registrationLink}" target="_blank" class="block text-center mt-2 bg-indigo-50 text-indigo-600 text-xs font-bold py-1.5 rounded hover:bg-indigo-100 transition">Register Now ↗</a>` 
+        : '';
+
     container.innerHTML += `
-                    <div class="bg-white p-3 rounded-lg border border-pink-100 shadow-sm mb-2 flex items-center space-x-3">
-                        <div class="bg-pink-50 text-pink-600 rounded p-2 text-center w-12">
-                            <div class="text-xl font-bold">${d.getDate()}</div>
-                        </div>
-                        <div class="flex-grow">
-                            <h4 class="font-bold text-sm text-gray-800">${
-                              e.name
-                            }</h4>
-                            <div class="flex justify-between items-center mt-1">
-                                <span class="text-xs text-gray-500">${
-                                  e.eventType
-                                }</span>
-                                ${cd}
-                            </div>
-                        </div>
-                    </div>`;
+        <div class="bg-white p-3 rounded-xl border border-pink-100 shadow-sm mb-3 hover:shadow-md transition-shadow">
+            <div class="flex items-start space-x-3">
+                <div class="bg-pink-50 text-pink-600 rounded-lg p-2 text-center min-w-[50px]">
+                    <div class="text-[10px] font-bold uppercase tracking-wider">${d.toLocaleDateString('en-US', {month:'short'})}</div>
+                    <div class="text-xl font-black leading-none">${d.getDate()}</div>
+                </div>
+                
+                <div class="flex-grow min-w-0">
+                    <div class="flex justify-between items-start">
+                        <h4 class="font-bold text-sm text-gray-800 truncate pr-2">${e.name}</h4>
+                        <span class="text-[10px] bg-gray-50 border border-gray-200 text-gray-500 px-1.5 rounded">${e.eventType}</span>
+                    </div>
+                    
+                    <div class="flex items-center gap-2 mt-1">
+                        <span class="text-xs text-gray-500 font-medium">${e.time || 'All Day'}</span>
+                        ${statusBadge}
+                    </div>
+                    
+                    <p class="text-xs text-gray-400 mt-1 line-clamp-1">${e.description || ''}</p>
+                </div>
+            </div>
+            ${registerBtn}
+        </div>`;
   });
 }
 
