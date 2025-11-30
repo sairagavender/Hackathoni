@@ -407,6 +407,17 @@ async function checkContentSafety(text) {
         alert("Error: " + e.message);
     }
     document.getElementById('sendReplyBtn').innerText = "Send Reply";
+    // --- FIX: CLEAR INPUTS HERE ---
+      titleEl.value = '';
+      bodyEl.value = '';
+      tagEl.value = '';
+      anonEl.checked = false;
+      // ------------------------------
+
+      setTimeout(() => {
+          statusEl.innerText = ''; // Clear status message too
+          togglePostCreator(false);
+      }, 800);
   };
 
   function closeThread(){
@@ -453,3 +464,4 @@ async function checkContentSafety(text) {
   async function deletePost(id){ if(confirm("Delete post?")) await db.collection('questions').doc(id).delete(); }
   async function deleteReply(rid){ if(confirm("Delete reply?")) await db.collection('questions').doc(currentThreadId).collection('replies').doc(rid).delete(); }
   function escapeHtml(t) { return t ? t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;") : ''; }
+  

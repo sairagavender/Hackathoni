@@ -34,115 +34,203 @@
         * { box-sizing: border-box; }
 
         /* --- 2. VERTICAL NAVBAR --- */
+        /* --- 1. LEFT NAVBAR (Animated) --- */
         .navbar {
-            width: 80px;
+            width: 60px; /* Slimmer collapsed width */
             height: 100vh;
             background: white;
             border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
-            align-items: center;
-            padding-top: 20px;
             transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 100;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .navbar:hover {
+            width: 260px;
+        }
+
+        /* COLLAPSED STATE: Center Arrow */
+        .nav-collapsed-arrow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--text-muted);
+            transition: opacity 0.2s, transform 0.3s;
+            pointer-events: none; /* Let hover pass through */
+        }
+
+        .navbar:hover .nav-collapsed-arrow {
+            opacity: 0;
+            transform: translate(-50%, -50%) rotate(180deg);
+        }
+
+        /* EXPANDED CONTENT: Hidden by default */
+        .nav-expanded-content {
+            opacity: 0;
+            display: flex;
+            flex-direction: column;
+            width: 260px; /* Fixed width to prevent wrapping */
+            height: 100%;
+            padding: 20px;
+            transition: opacity 0.2s ease-in;
+            pointer-events: none; /* Prevent clicks when hidden */
+        }
+
+        .navbar:hover .nav-expanded-content {
+            opacity: 1;
+            pointer-events: auto;
+            transition-delay: 0.1s;
+        }
+
+        /* User Profile Brand */
+        .user-brand {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text);
+            margin-bottom: 30px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            color: white;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             flex-shrink: 0;
         }
 
-        .navbar:hover { width: 240px; align-items: flex-start; }
-        .logo-icon {
-            width: 40px; height: 40px; background: var(--primary); color: white;
-            border-radius: 10px; display: flex; align-items: center; justify-content: center;
-            font-weight: 900; font-size: 20px; margin-bottom: 40px; flex-shrink: 0;
-            margin-left: 20px; transition: 0.3s;
+        .user-name-nav {
+            margin-left: 12px;
+            font-weight: 700;
+            font-size: 16px;
         }
-        .navbar:hover .logo-icon { margin-left: 20px; }
-        .nav-link {
-            display: flex; align-items: center; text-decoration: none; color: var(--text-muted);
-            padding: 15px 20px; width: 100%; transition: 0.2s; position: relative;
-            white-space: nowrap; overflow: hidden;
-        }
-        .nav-link i { min-width: 24px; height: 24px; margin-right: 20px; }
-        .nav-text { opacity: 0; transform: translateX(-10px); transition: 0.2s; font-weight: 600; }
-        .navbar:hover .nav-text { opacity: 1; transform: translateX(0); transition-delay: 0.1s; }
-        .nav-link:hover { background-color: #eef2ff; color: var(--primary); }
-        .nav-link:hover::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--primary); }
 
-        /* --- 3. MAIN SCROLLABLE AREA --- */
+        /* Nav Links */
+        .nav-links-container {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-muted);
+            padding: 12px 15px;
+            border-radius: 8px;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+
+        .nav-link i {
+            min-width: 20px;
+            height: 20px;
+            margin-right: 15px;
+        }
+
+        .nav-text {
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .nav-link:hover {
+            background-color: #eef2ff;
+            color: var(--primary);
+        }
+
+
+        /* --- 3. MAIN CONTENT --- */
         .main-content { flex: 1; overflow-y: auto; height: 100vh; position: relative; }
 
-        /* Header */
         header {
             background: white; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 30;
             padding: 0 30px; height: 64px; display: flex; align-items: center; justify-content: space-between;
         }
         header h1 { font-size: 20px; font-weight: 700; color: var(--primary); margin: 0; }
 
-        /* Operator Button */
         .add-btn {
             background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 6px;
-            font-size: 13px; font-weight: 600; cursor: pointer; display: none; /* Hidden by default */
+            font-size: 13px; font-weight: 600; cursor: pointer; display: none; 
             align-items: center; gap: 6px; transition: 0.2s;
         }
         .add-btn:hover { background: var(--primary-hover); }
 
-        /* Filters */
+        /* Updated Filter Bar to handle more items */
         .filter-bar {
             background: #f9fafb; border-bottom: 1px solid var(--border); padding: 12px 30px;
             display: flex; align-items: center; gap: 10px; overflow-x: auto;
+            scrollbar-width: none; /* Hide scrollbar Firefox */
         }
+        .filter-bar::-webkit-scrollbar { display: none; } /* Hide scrollbar Chrome/Safari */
+
         .filter-btn {
             padding: 6px 16px; border-radius: 50px; font-size: 13px; font-weight: 500;
             border: 1px solid var(--border); background: white; color: var(--text-muted);
-            cursor: pointer; transition: 0.2s; white-space: nowrap;
+            cursor: pointer; transition: 0.2s; white-space: nowrap; flex-shrink: 0;
         }
         .filter-btn:hover, .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 
-        /* Container */
         .container { max-width: 1200px; margin: 0 auto; padding: 30px; }
         .section-header { margin-bottom: 24px; }
         .section-header h2 { font-size: 24px; margin: 0; color: var(--text-main); }
         .section-header p { margin: 4px 0 0 0; color: var(--text-muted); font-size: 14px; }
 
-        /* Grid */
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px; }
 
-        /* Event Card */
+        /* --- EVENT CARD (NO IMAGE) --- */
         .event-card {
             background: white; border-radius: 12px; overflow: hidden; border: 1px solid var(--border);
-            transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; display: flex; flex-direction: column; position: relative;
+            transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; display: flex; flex-direction: column; 
+            position: relative; height: 100%;
         }
-        .event-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+        .event-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); border-color: var(--primary); }
         
-        .card-image { height: 160px; width: 100%; background: #e5e7eb; position: relative; overflow: hidden; }
-        .card-image img { width: 100%; height: 100%; object-fit: cover; }
-        .card-overlay {
-            position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-            padding: 20px 12px 10px 12px; color: white; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px;
-        }
-        .card-content { padding: 16px; flex: 1; display: flex; flex-direction: column; }
-        .card-title { font-size: 16px; font-weight: 700; margin: 0 0 4px 0; color: var(--text-main); line-height: 1.4; }
-        .card-loc { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
+        .card-content { padding: 24px; flex: 1; display: flex; flex-direction: column; }
+        
+        .card-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        
         .card-tag {
-            display: inline-block; background: #eef2ff; color: var(--primary); font-size: 11px;
-            padding: 2px 8px; border-radius: 4px; font-weight: 600; align-self: flex-start; margin-top: auto;
+            background: #eef2ff; color: var(--primary); font-size: 11px; padding: 4px 10px; 
+            border-radius: 20px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
         }
         
-        /* Delete Button (Operator Only) */
-        .delete-card-btn {
-            position: absolute; top: 10px; right: 10px; background: white; color: var(--danger);
-            border: 1px solid var(--border); border-radius: 4px; width: 28px; height: 28px;
-            display: none; align-items: center; justify-content: center; z-index: 10;
-        }
-        .delete-card-btn:hover { background: #fee2e2; }
+        .card-date { font-size: 13px; color: var(--text-muted); font-weight: 500; display: flex; align-items: center; gap: 6px;}
 
-        /* Empty State */
+        .card-title { font-size: 20px; font-weight: 700; margin: 0 0 10px 0; color: var(--text-main); line-height: 1.3; }
+        .card-loc { font-size: 14px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; margin-bottom: 16px;}
+        
+        .card-desc-preview { 
+            font-size: 14px; color: #4b5563; line-height: 1.5; 
+            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; 
+            margin-top: auto; 
+        }
+
+        .delete-card-btn {
+            position: absolute; bottom: 20px; right: 20px; background: white; color: var(--danger);
+            border: 1px solid var(--border); border-radius: 6px; width: 32px; height: 32px;
+            display: none; align-items: center; justify-content: center; z-index: 10; transition: 0.2s;
+        }
+        .delete-card-btn:hover { background: #fee2e2; border-color: #fee2e2; }
+
         .empty-state {
             text-align: center; padding: 60px 20px; background: white; border-radius: 12px;
             border: 2px dashed var(--border); color: var(--text-muted); display: none;
         }
         .empty-state.visible { display: block; }
 
-        /* --- 4. MODALS (View & Add) --- */
+        /* --- MODALS --- */
         .modal-backdrop {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 1000;
@@ -151,39 +239,41 @@
         .modal-backdrop.active { display: flex; animation: fadeIn 0.2s ease-out; }
 
         .modal-card {
-            background: white; width: 100%; max-width: 800px; border-radius: 16px;
-            overflow: hidden; display: flex; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); max-height: 90vh;
+            background: white; width: 100%; max-width: 600px; border-radius: 16px;
+            overflow: hidden; display: flex; flex-direction: column;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); max-height: 90vh;
+            padding: 30px; position: relative; overflow-y: auto;
         }
-        /* Add Event Modal Specifics */
-        .modal-form-card { max-width: 500px; flex-direction: column; overflow-y: auto; }
-        
-        .modal-img-col { width: 40%; position: relative; }
-        .modal-img-col img { width: 100%; height: 100%; object-fit: cover; }
-        .modal-info-col { width: 60%; padding: 30px; display: flex; flex-direction: column; overflow-y: auto; position: relative; }
 
         .close-btn {
-            position: absolute; top: 15px; right: 15px; background: #f3f4f6; border: none; border-radius: 50%;
+            position: absolute; top: 20px; right: 20px; background: #f3f4f6; border: none; border-radius: 50%;
             width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #666; z-index: 10;
         }
         .close-btn:hover { background: #e5e7eb; }
 
-        .modal-cat { color: var(--primary); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-        .modal-title { font-size: 24px; font-weight: 800; margin: 5px 0 15px 0; color: var(--text-main); line-height: 1.2; }
-        .modal-meta div { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 14px; color: var(--text-muted); }
-        .modal-desc { font-size: 15px; line-height: 1.6; color: #4b5563; margin-bottom: 30px; }
+        .modal-cat { color: var(--primary); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;}
+        .modal-title { font-size: 28px; font-weight: 800; margin: 0 0 20px 0; color: var(--text-main); line-height: 1.2; }
+        
+        .modal-meta { 
+            display: flex; gap: 20px; margin-bottom: 24px; padding-bottom: 24px; 
+            border-bottom: 1px solid var(--border); flex-wrap: wrap;
+        }
+        .modal-meta div { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-muted); font-weight: 500;}
+
+        .modal-desc { font-size: 16px; line-height: 1.6; color: #374151; margin-bottom: 30px; }
         
         .modal-cta {
-            margin-top: auto; background: var(--primary); color: white; text-decoration: none;
-            padding: 12px; border-radius: 8px; font-weight: 600; text-align: center; display: flex;
+            background: var(--primary); color: white; text-decoration: none;
+            padding: 14px; border-radius: 8px; font-weight: 600; text-align: center; display: flex;
             align-items: center; justify-content: center; gap: 8px; transition: 0.2s;
+            width: 100%; margin-top: auto;
         }
         .modal-cta:hover { background: var(--primary-hover); }
 
-        /* Form Elements */
         .form-group { margin-bottom: 16px; }
         .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; }
         .form-input, .form-select, .form-textarea {
-            width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-family: inherit; font-size: 14px;
+            width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 14px;
         }
         .form-input:focus { outline: none; border-color: var(--primary); }
         .form-row { display: flex; gap: 12px; }
@@ -191,20 +281,49 @@
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
         @media (max-width: 768px) {
             .navbar { display: none; }
-            .modal-card { flex-direction: column; height: auto; max-height: 85vh; }
-            .modal-img-col { width: 100%; height: 200px; }
-            .modal-info-col { width: 100%; padding: 20px; }
+            .modal-card { max-height: 85vh; padding: 20px; }
         }
     </style>
 </head>
 <body>
 
     <nav class="navbar">
-        <div class="logo-icon">V</div>
-        <div style="flex:1; width:100%; display:flex; flex-direction:column; justify-content:center; gap:10px;">
-            <a href="veddit.html" class="nav-link"><i data-lucide="message-circle"></i><span class="nav-text">Forum</span></a>
-            <a href="calendram.html" class="nav-link"><i data-lucide="calendar"></i><span class="nav-text">Calendram</span></a>
-            <a href="events.html" class="nav-link"><i data-lucide="ticket"></i><span class="nav-text">Campus Buzz</span></a>
+        <div class="nav-collapsed-arrow">
+            <i data-lucide="arrow-right" style="width:24px; height:24px;"></i>
+        </div>
+
+        <div class="nav-expanded-content">
+            <a href="profile.html" class="user-brand">
+                <div class="logo-icon"><i data-lucide="user"></i></div>
+                <span class="user-name-nav" id="nav-user-name">My Profile</span>
+            </a>
+            
+            <div class="nav-links-container">
+                <a href="index.html" class="nav-link">
+                    <i data-lucide="home"></i>
+                    <span class="nav-text">Home</span>
+                </a>
+                
+                <a href="veddit.html" class="nav-link">
+                    <i data-lucide="message-circle"></i>
+                    <span class="nav-text">Veddit</span>
+                </a>
+
+                <a href="news.html" class="nav-link">
+                    <i data-lucide="newspaper"></i>
+                    <span class="nav-text">Socio</span>
+                </a>
+
+                <a href="calendram.html" class="nav-link">
+                    <i data-lucide="coffee"></i>
+                    <span class="nav-text">Lounge</span>
+                </a>
+
+                <a href="events.html" class="nav-link">
+                    <i data-lucide="ticket"></i>
+                    <span class="nav-text">Campus Buzz</span>
+                </a>
+            </div>
         </div>
     </nav>
 
@@ -218,7 +337,7 @@
 
         <div class="filter-bar" id="filter-container">
             <i data-lucide="filter" style="color: #9ca3af; width: 16px;"></i>
-            </div>
+        </div>
 
         <div class="container">
             <div class="section-header">
@@ -239,82 +358,79 @@
 
     <div id="event-modal" class="modal-backdrop">
         <div class="modal-card">
-            <div class="modal-img-col">
-                <img id="modal-image" src="" alt="Event Image">
+            <button class="close-btn" onclick="closeModal('event-modal')"><i data-lucide="x" style="width: 18px;"></i></button>
+            
+            <div id="modal-category" class="modal-cat"></div>
+            <div id="modal-title" class="modal-title"></div>
+            
+            <div class="modal-meta">
+                <div><i data-lucide="calendar" style="width:18px;"></i> <span id="modal-date"></span></div>
+                <div><i data-lucide="clock" style="width:18px;"></i> <span id="modal-time"></span></div>
+                <div><i data-lucide="map-pin" style="width:18px;"></i> <span id="modal-location"></span></div>
             </div>
-            <div class="modal-info-col">
-                <button class="close-btn" onclick="closeModal('event-modal')"><i data-lucide="x" style="width: 18px;"></i></button>
-                <div id="modal-category" class="modal-cat"></div>
-                <div id="modal-title" class="modal-title"></div>
-                <div class="modal-meta">
-                    <div><i data-lucide="calendar" style="width:16px;"></i> <span id="modal-date"></span> &bull; <span id="modal-time"></span></div>
-                    <div><i data-lucide="map-pin" style="width:16px;"></i> <span id="modal-location"></span></div>
-                </div>
-                <div id="modal-description" class="modal-desc"></div>
-                <a id="modal-register-btn" href="#" target="_blank" class="modal-cta">
-                    Register Here <i data-lucide="external-link" style="width:16px;"></i>
-                </a>
-            </div>
+            
+            <div id="modal-description" class="modal-desc"></div>
+            
+            <a id="modal-register-btn" href="#" target="_blank" class="modal-cta">
+                Register Here <i data-lucide="external-link" style="width:16px;"></i>
+            </a>
         </div>
     </div>
 
     <div id="add-modal" class="modal-backdrop">
-        <div class="modal-card modal-form-card">
-            <div class="modal-info-col" style="width:100%;">
-                <button class="close-btn" onclick="closeModal('add-modal')"><i data-lucide="x" style="width: 18px;"></i></button>
-                <h3 style="margin-top:0;">Add New Event</h3>
+        <div class="modal-card">
+            <button class="close-btn" onclick="closeModal('add-modal')"><i data-lucide="x" style="width: 18px;"></i></button>
+            <h3 style="margin-top:0;">Add New Event</h3>
+            
+            <form id="add-event-form">
+                <div class="form-group">
+                    <label>Event Title</label>
+                    <input type="text" id="add-title" class="form-input" required placeholder="e.g. Hackathon 2025">
+                </div>
                 
-                <form id="add-event-form">
-                    <div class="form-group">
-                        <label>Event Title</label>
-                        <input type="text" id="add-title" class="form-input" required placeholder="e.g. Hackathon 2025">
+                <div class="form-row">
+                    <div class="form-group" style="flex:1">
+                        <label>Date</label>
+                        <input type="date" id="add-date" class="form-input" required>
                     </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group" style="flex:1">
-                            <label>Date</label>
-                            <input type="date" id="add-date" class="form-input" required>
-                        </div>
-                        <div class="form-group" style="flex:1">
-                            <label>Time</label>
-                            <input type="time" id="add-time" class="form-input" required>
-                        </div>
+                    <div class="form-group" style="flex:1">
+                        <label>Time</label>
+                        <input type="time" id="add-time" class="form-input" required>
                     </div>
+                </div>
 
-                    <div class="form-row">
-                        <div class="form-group" style="flex:1">
-                            <label>Location</label>
-                            <input type="text" id="add-location" class="form-input" required placeholder="e.g. Auditorium">
-                        </div>
-                        <div class="form-group" style="flex:1">
-                            <label>Club / Category</label>
-                            <select id="add-club" class="form-select" required>
-                                <option value="Tech">Tech Club</option>
-                                <option value="Cultural">Cultural Club</option>
-                                <option value="Sports">Sports</option>
-                                <option value="Academic">Academic</option>
-                            </select>
-                        </div>
+                <div class="form-row">
+                    <div class="form-group" style="flex:1">
+                        <label>Location</label>
+                        <input type="text" id="add-location" class="form-input" required placeholder="e.g. Auditorium">
                     </div>
-
-                    <div class="form-group">
-                        <label>Registration Link</label>
-                        <input type="url" id="add-link" class="form-input" placeholder="https://forms.google.com/..." required>
+                    <div class="form-group" style="flex:1">
+                        <label>Category</label>
+                        <select id="add-club" class="form-select" required>
+                            <option value="Tech">Tech</option>
+                            <option value="Cultural">Cultural</option>
+                            <option value="Sports">Sports</option>
+                            <option value="Academic">Academic</option>
+                            <option value="Activity">Activity</option>
+                            <option value="Exam">Exam</option>
+                            <option value="Assignment">Assignment</option>
+                            <option value="Task">Task</option>
+                        </select>
                     </div>
+                </div>
 
-                    <div class="form-group">
-                        <label>Image URL (Optional)</label>
-                        <input type="url" id="add-image" class="form-input" placeholder="https://...">
-                    </div>
+                <div class="form-group">
+                    <label>Registration Link</label>
+                    <input type="url" id="add-link" class="form-input" placeholder="https://forms.google.com/..." required>
+                </div>
 
-                    <div class="form-group">
-                        <label>Description</label>
-                        <textarea id="add-desc" class="form-textarea" rows="4" required placeholder="Event details..."></textarea>
-                    </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="add-desc" class="form-textarea" rows="5" required placeholder="Event details..."></textarea>
+                </div>
 
-                    <button type="submit" class="modal-cta" style="border:0; width:100%; cursor:pointer;">Publish Event</button>
-                </form>
-            </div>
+                <button type="submit" class="modal-cta" style="border:0; width:100%; cursor:pointer;">Publish Event</button>
+            </form>
         </div>
     </div>
 
@@ -323,7 +439,6 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, getDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
-        // CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyDCOT7bvPnU4zhOAkOG_nFxSLP0f58itgo",
             authDomain: "veddit-a03a0.firebaseapp.com",
@@ -338,7 +453,6 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // STATE
         let allEvents = [];
         let activeFilter = 'All';
         let currentUserRole = 'student';
@@ -346,22 +460,15 @@
         // --- AUTH & LISTENER ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // Get Role
                 const uDoc = await getDoc(doc(db, 'users', user.uid));
                 if (uDoc.exists()) currentUserRole = uDoc.data().role || 'student';
-                
-                // Show Add Button if Operator
-                if (currentUserRole === 'operator') {
-                    document.getElementById('add-event-btn').style.display = 'flex';
-                }
+                if (currentUserRole === 'operator') document.getElementById('add-event-btn').style.display = 'flex';
             } else {
                 currentUserRole = 'guest';
                 document.getElementById('add-event-btn').style.display = 'none';
             }
         });
 
-        // Listen for Events (Real-time)
-        // Using 'global_events' collection to match your previous code
         const q = query(collection(db, "global_events"), orderBy("date", "asc"));
         onSnapshot(q, (snapshot) => {
             allEvents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -370,8 +477,8 @@
 
         // --- UI FUNCTIONS ---
         
-        // Render Filters
-        const filters = ['All', 'Tech', 'Cultural', 'Sports', 'Academic'];
+        // Comprehensive Filter List
+        const filters = ['All', 'Tech', 'Cultural', 'Sports', 'Academic', 'Activity', 'Exam', 'Assignment', 'Task'];
         const filterContainer = document.getElementById('filter-container');
         filterContainer.innerHTML = `<i data-lucide="filter" style="color: #9ca3af; width: 16px;"></i>`;
         
@@ -388,17 +495,19 @@
             filterContainer.appendChild(btn);
         });
 
-        // Render Grid
         function renderEvents() {
             const grid = document.getElementById('events-grid');
             const emptyState = document.getElementById('empty-state');
             grid.innerHTML = '';
             
-            // Filter Logic
-            // Note: In your old code you used 'category', ensure consistency
             const filtered = activeFilter === 'All' 
                 ? allEvents 
-                : allEvents.filter(e => (e.category || e.eventType) === activeFilter);
+                : allEvents.filter(e => {
+                    // Normalize data: get the category or eventType, convert to string
+                    const type = (e.category || e.eventType || '').toString();
+                    // Check if the Event Type includes the Filter Name (e.g. "CulturalEvent" includes "Cultural")
+                    return type.includes(activeFilter);
+                });
             
             if (filtered.length === 0) {
                 emptyState.classList.add('visible');
@@ -408,28 +517,24 @@
                     const card = document.createElement('div');
                     card.className = "event-card";
                     
-                    // Fallback Image logic
-                    const imgSrc = evt.image || "https://plus.unsplash.com/premium_photo-1763727434849-058424c7efae?q=80&w=1455&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
-                    
-                    // Delete Button (Only for Operator)
                     let deleteHtml = '';
                     if (currentUserRole === 'operator') {
-                        deleteHtml = `<button class="delete-card-btn" style="display:flex" onclick="deleteEvent(event, '${evt.id}')"><i data-lucide="trash-2" style="width:14px"></i></button>`;
+                        deleteHtml = `<button class="delete-card-btn" style="display:flex" onclick="deleteEvent(event, '${evt.id}')"><i data-lucide="trash-2" style="width:16px"></i></button>`;
                     }
 
-                    // Card HTML
+                    // Display Name handling
+                    const displayTag = evt.category || evt.eventType || 'General';
+
                     card.innerHTML = `
                         ${deleteHtml}
-                        <div class="card-image" onclick="openViewModal('${evt.id}')">
-                            <img src="${imgSrc}" loading="lazy">
-                            <div class="card-overlay">
-                                <i data-lucide="calendar" style="width:12px;"></i> ${evt.date}
-                            </div>
-                        </div>
                         <div class="card-content" onclick="openViewModal('${evt.id}')">
+                            <div class="card-header-row">
+                                <span class="card-tag">${displayTag}</span>
+                                <span class="card-date"><i data-lucide="calendar" style="width:14px;"></i> ${evt.date}</span>
+                            </div>
                             <h3 class="card-title">${evt.name || evt.title}</h3>
-                            <div class="card-loc">${evt.location || 'Campus'}</div>
-                            <span class="card-tag">${evt.category || evt.eventType}</span>
+                            <div class="card-loc"><i data-lucide="map-pin" style="width:14px;"></i> ${evt.location || 'Campus'}</div>
+                            <div class="card-desc-preview">${evt.description || 'No description provided.'}</div>
                         </div>
                     `;
                     grid.appendChild(card);
@@ -440,7 +545,6 @@
 
         // --- ACTIONS ---
 
-        // Add Event
         window.openAddModal = () => document.getElementById('add-modal').classList.add('active');
         
         document.getElementById('add-event-form').onsubmit = async (e) => {
@@ -454,9 +558,10 @@
                     date: document.getElementById('add-date').value,
                     time: document.getElementById('add-time').value,
                     location: document.getElementById('add-location').value,
-                    category: document.getElementById('add-club').value,
+                    category: document.getElementById('add-club').value, // This saves as 'category'
+                    // Also save as eventType for compatibility with Calendram if needed
+                    eventType: document.getElementById('add-club').value, 
                     registrationLink: document.getElementById('add-link').value,
-                    image: document.getElementById('add-image').value,
                     description: document.getElementById('add-desc').value,
                     createdAt: serverTimestamp()
                 });
@@ -470,12 +575,10 @@
             }
         };
 
-        // View Event
         window.openViewModal = (id) => {
             const evt = allEvents.find(e => e.id === id);
             if(!evt) return;
 
-            document.getElementById('modal-image').src = evt.image || "https://plus.unsplash.com/premium_photo-1763727434849-058424c7efae?q=80&w=1455&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
             document.getElementById('modal-category').innerText = evt.category || evt.eventType;
             document.getElementById('modal-title').innerText = evt.name || evt.title;
             document.getElementById('modal-date').innerText = evt.date;
@@ -495,18 +598,15 @@
             lucide.createIcons();
         };
 
-        // Delete Event
         window.deleteEvent = async (e, id) => {
-            e.stopPropagation(); // Prevent opening modal
+            e.stopPropagation(); 
             if(confirm("Are you sure you want to delete this event?")) {
                 await deleteDoc(doc(db, "global_events", id));
             }
         };
 
-        // Helper
         window.closeModal = (id) => document.getElementById(id).classList.remove('active');
         
-        // Initial Icon Load
         lucide.createIcons();
     </script>
 </body>

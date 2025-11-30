@@ -4,240 +4,330 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Academic Scheduler — Veddit</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <script src="https://unpkg.com/lucide@latest"></script>
+    
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #6366f1; border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background-color: #f3f4f6; }
-        .calendar-day-box { height: 40px; width: 14.28%; transition: background-color 0.15s; }
-        .timetable-header-cell { min-width: 120px; }
-        .timetable-cell { min-width: 120px; }
+        /* --- KEEPING CUSTOM CSS FOR COMPLEX COMPONENTS (Timetable/Calendar) --- */
+        
+        /* Variables mapped to Tailwind colors for consistency */
+        :root {
+            --primary: #4f46e5; /* indigo-600 */
+            --bg: #f3f4f6;      /* gray-100 */
+            --border: #e5e7eb;  /* gray-200 */
+        }
+
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg); }
+
+        /* Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #94a3b8; }
+
+        /* Timetable Specifics */
+        .timetable-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 0.5rem; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+        th, td { border: 1px solid var(--border); padding: 8px 12px; text-align: center; white-space: nowrap; }
+        th { background: #f9fafb; color: #64748b; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; }
+        
+        /* Calendar Specifics */
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; margin-top: 10px; }
+        .cal-day { 
+            height: 32px; display: flex; align-items: center; justify-content: center; 
+            border-radius: 50%; font-size: 0.8rem; cursor: default; transition: 0.2s;
+        }
+        .cal-day:hover:not(.empty) { background: #f3f4f6; }
+        .cal-day.today { background: var(--primary); color: white; font-weight: 700; }
+        .cal-day.event { background: #fce7f3; color: #be185d; font-weight: 700; }
+
+        /* Form Inputs */
+        .form-input { 
+            width: 100%; padding: 0.5rem 0.75rem; border: 1px solid var(--border); 
+            border-radius: 0.5rem; font-size: 0.875rem; transition: 0.2s; 
+        }
+        .form-input:focus { outline: none; border-color: var(--primary); ring: 2px solid #e0e7ff; }
+
+        /* Loader */
+        .spinner { width: 32px; height: 32px; border: 3px solid #e5e7eb; border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Utility */
+        .view-content.hidden { display: none; }
     </style>
 </head>
-<body class="bg-gray-50 h-screen overflow-hidden">
+<body class="h-screen flex overflow-hidden bg-gray-50 text-gray-800">
     
-    <div id="app" class="flex h-screen w-full">
+    <div id="app" class="flex w-full h-full">
         
-        <aside class="w-64 bg-white border-r border-gray-200 flex flex-col justify-between flex-shrink-0 z-20 shadow-sm">
-            <div>
-                <div class="h-16 flex items-center px-6 border-b border-gray-100">
-                    <h1 class="text-2xl font-bold text-indigo-600 flex items-center gap-2">
-                        <i data-lucide="calendar-clock" class="w-6 h-6"></i> Calendram
-                    </h1>
-                </div>
+        <nav class="group w-16 hover:w-64 h-full bg-white border-r border-gray-200 flex flex-col transition-all duration-300 ease-in-out z-50 flex-shrink-0 relative shadow-sm">
+            
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gray-400 group-hover:opacity-0 transition-opacity duration-200 pointer-events-none">
+                <i data-lucide="arrow-right" class="w-6 h-6"></i>
+            </div>
 
-                <nav class="p-4 space-y-2 flex flex-col">
-                    <button onclick="switchView('dashboard')" id="nav-dashboard" class="nav-button w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-left bg-indigo-50 text-indigo-700 transition duration-150">
+            <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 delay-75 flex flex-col h-full p-5 overflow-hidden whitespace-nowrap">
+                
+                <a href="profile.html" class="flex items-center gap-3 mb-8 text-gray-800 hover:text-indigo-600 transition-colors">
+                    <div class="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center text-white flex-shrink-0">
+                        <i data-lucide="user" class="w-5 h-5"></i>
+                    </div>
+                    <span id="nav-user-name" class="font-bold text-base truncate">Loading...</span>
+                </a>
+
+                <div class="flex flex-col gap-2 flex-1 overflow-y-auto custom-scrollbar">
+                    
+                    <button onclick="switchView('dashboard')" id="nav-dashboard" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 transition-colors text-sm font-semibold">
                         <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
                     </button>
                     
-                    <button onclick="switchView('timetable-editor')" id="nav-editor" class="nav-button hidden w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-left text-gray-600 hover:bg-gray-50 transition duration-150">
+                    <button onclick="switchView('timetable-editor')" id="nav-editor" class="hidden flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 transition-colors text-sm font-semibold">
                         <i data-lucide="edit-3" class="w-5 h-5"></i> Editor
                     </button>
                     
-                    <button onclick="switchView('event-adder')" id="nav-events" class="nav-button hidden w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-left text-gray-600 hover:bg-gray-50 transition duration-150">
+                    <button onclick="switchView('event-adder')" id="nav-events" class="hidden flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 transition-colors text-sm font-semibold">
                         <i data-lucide="plus-circle" class="w-5 h-5"></i> Add Event
                     </button>
-                </nav>
-            </div>
 
-            <div class="p-4 border-t border-gray-100 bg-gray-50">
-                <div class="flex flex-col gap-2">
-                    <span class="text-xs uppercase font-semibold text-gray-400">Current Role</span>
-                    <span id="user-role-display" class="text-sm font-bold text-gray-800 bg-white border px-2 py-1 rounded w-fit shadow-sm">Loading...</span>
-                    
-                    <a href="index.html" class="mt-4 flex items-center gap-2 text-sm text-gray-500 hover:text-red-600 transition-colors">
-                        <i data-lucide="log-out" class="w-4 h-4"></i> Exit App
+                    <div class="h-px bg-gray-100 my-2"></div>
+
+                    <a href="index.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 transition-colors text-sm font-medium">
+                        <i data-lucide="home" class="w-5 h-5"></i> Home
+                    </a>
+                    <a href="veddit.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 transition-colors text-sm font-medium">
+                        <i data-lucide="message-circle" class="w-5 h-5"></i> Veddit
+                    </a>
+                    <a href="news.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 transition-colors text-sm font-medium">
+                        <i data-lucide="newspaper" class="w-5 h-5"></i> Socio
+                    </a>
+                    <a href="events.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 transition-colors text-sm font-medium">
+                        <i data-lucide="ticket" class="w-5 h-5"></i> Campus Buzz
+                    </a>
+
+                    <div class="h-px bg-gray-100 my-2"></div>
+
+                    <a href="index.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors text-sm font-bold">
+                        <i data-lucide="log-out" class="w-5 h-5"></i> Exit App
                     </a>
                 </div>
-            </div>
-        </aside>
 
-        <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+                <div class="mt-4 pt-4 border-t border-gray-100">
+                    <span id="user-role-display" class="text-[10px] font-bold uppercase tracking-wider text-gray-400 bg-gray-50 px-2 py-1 rounded">GUEST</span>
+                </div>
+            </div>
+        </nav>
+
+        <main class="flex-1 h-full overflow-y-auto custom-scrollbar p-8 relative">
             
-            <div id="loading-overlay" class="absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50">
-                <div class="flex flex-col items-center">
-                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-                    <p class="mt-4 text-indigo-600 font-medium">Checking permissions...</p>
+            <div id="loading-overlay" class="fixed inset-0 bg-white/90 z-50 flex flex-col items-center justify-center">
+                <div class="spinner"></div>
+                <p class="mt-4 text-indigo-600 font-semibold text-sm">Checking permissions...</p>
+            </div>
+
+            <div id="error-message" class="hidden mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg">
+                <p class="text-red-700 font-bold text-sm">Error</p>
+                <p id="error-text" class="text-red-600 text-sm">Something went wrong.</p>
+            </div>
+            
+            <div id="dashboard-view" class="view-content space-y-8">
+                <header>
+                    <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">Dashboard</h2>
+                    <p class="text-gray-500 text-sm mt-1">Overview of your academic schedule.</p>
+                </header>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                                <i data-lucide="table" class="w-5 h-5 text-indigo-500"></i> Class Timetable
+                            </h3>
+                            <span id="current-timetable-name" class="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full uppercase">...</span>
+                        </div>
+                        <div id="current-timetable" class="timetable-scroll">
+                            <p class="text-gray-400 italic text-sm p-4">No active timetable found.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                                <i data-lucide="calendar" class="w-5 h-5 text-yellow-500"></i> Calendar
+                            </h3>
+                            <span id="current-month-display" class="text-sm font-semibold text-gray-600"></span>
+                        </div>
+                        <div id="calendar-view" class="text-sm"></div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i data-lucide="bell" class="w-5 h-5 text-pink-500"></i> Upcoming Events & Tasks
+                    </h3>
+                    <div id="upcoming-events" class="max-h-96 overflow-y-auto custom-scrollbar space-y-3">
+                        <p class="text-gray-400 italic text-sm">No events scheduled yet.</p>
+                    </div>
                 </div>
             </div>
 
-            <div class="flex-1 overflow-y-auto custom-scrollbar p-8">
-                
-                <div id="error-message" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-lg shadow-sm" role="alert">
-                    <p class="font-bold">Error</p>
-                    <p id="error-text">Something went wrong.</p>
-                </div>
-                
-                <div id="dashboard-view" class="view-content space-y-8">
-                    <header class="mb-6">
-                        <h2 class="text-3xl font-bold text-gray-800">Dashboard</h2>
-                        <p class="text-gray-500">Overview of your schedule and events.</p>
-                    </header>
+            <div id="timetable-editor-view" class="view-content hidden space-y-6">
+                <header>
+                    <h2 class="text-3xl font-extrabold text-gray-900">Editor</h2>
+                    <p class="text-gray-500 text-sm mt-1">Manage subjects and configure schedules.</p>
+                </header>
 
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                            <div class="flex justify-between items-center mb-6">
-                                <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                                    <i data-lucide="table" class="w-5 h-5 text-indigo-500"></i> Timetable
-                                </h3>
-                                <p id="current-timetable-name" class="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full"></p>
-                            </div>
-                            <div id="current-timetable" class="overflow-x-auto">
-                                <p class="text-gray-500 italic" id="no-timetable-msg">No active timetable found.</p>
-                            </div>
+                <div class="max-w-5xl mx-auto space-y-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Subject Manager</h3>
+                        <div id="subject-list" class="flex flex-wrap gap-2 mb-4">
+                            <span class="text-gray-400 text-sm italic">Add a subject below.</span>
                         </div>
-                        
-                        <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                            <div class="flex justify-between items-center mb-6">
-                                <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                                    <i data-lucide="calendar" class="w-5 h-5 text-yellow-500"></i> Calendar
-                                </h3>
-                                <span id="current-month-display" class="text-sm font-bold text-gray-600"></span>
-                            </div>
-                            <div id="calendar-view"></div>
-                        </div>
+                        <form id="subject-form" class="flex gap-4" onsubmit="addSubject(event)">
+                            <input type="text" id="new-subject-name" class="form-input flex-1" required placeholder="New Subject Name">
+                            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold text-sm transition-colors">Add</button>
+                        </form>
                     </div>
 
-                    <div class="grid grid-cols-1 gap-6">
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                                <i data-lucide="bell" class="w-5 h-5 text-pink-500"></i> Upcoming Events
-                            </h3>
-                            <div id="upcoming-events" class="space-y-3 max-h-96 overflow-y-auto custom-scrollbar">
-                                <p class="text-gray-500 italic">No events scheduled yet.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="timetable-editor-view" class="view-content hidden">
-                    <header class="mb-6">
-                        <h2 class="text-3xl font-bold text-gray-800">Editor</h2>
-                        <p class="text-gray-500">Manage subjects and class schedules.</p>
-                    </header>
-
-                    <div class="max-w-6xl mx-auto space-y-6">
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Subject Manager</h3>
-                            <div class="flex flex-wrap gap-2 mb-4" id="subject-list">
-                                <span class="text-gray-500 italic text-sm">Add a subject below.</span>
-                            </div>
-                            <form id="subject-form" class="flex gap-4" onsubmit="addSubject(event)">
-                                <input type="text" id="new-subject-name" required placeholder="New Subject Name" class="flex-grow p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none">
-                                <button type="submit" class="bg-green-600 text-white font-semibold px-6 py-2 rounded-lg hover:bg-green-700 transition duration-150">Add</button>
-                            </form>
-                        </div>
-
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                            <h3 class="text-lg font-semibold text-gray-800 mb-6">Timetable Configuration</h3>
-                            <form id="timetable-form" onsubmit="handleTimetableSubmit(event)" class="space-y-4">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Timetable Name</label>
-                                        <input type="text" id="timetable-name" required placeholder="e.g., Semester 1" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Load Existing</label>
-                                        <select id="load-timetable" onchange="loadTimetableForEditing(this.value)" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white">
-                                            <option value="">-- New --</option>
-                                        </select>
-                                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                        <h3 class="text-lg font-bold text-gray-800 mb-6">Timetable Configuration</h3>
+                        <form id="timetable-form" onsubmit="handleTimetableSubmit(event)" class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Timetable Name</label>
+                                    <input type="text" id="timetable-name" class="form-input" required placeholder="e.g. Semester 1">
                                 </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Load Existing</label>
+                                    <select id="load-timetable" class="form-input bg-white" onchange="loadTimetableForEditing(this.value)">
+                                        <option value="">-- Create New --</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-3">Time Slots</label>
+                                <div id="time-slot-editor" class="flex flex-wrap gap-2 mb-4"></div>
                                 
-                                <div class="mb-6 border p-4 rounded-lg bg-gray-50">
-                                    <h4 class="font-medium text-gray-700 mb-2 text-sm uppercase tracking-wide">Time Slots</h4>
-                                    <div id="time-slot-editor" class="flex flex-wrap gap-2 mb-4"></div>
+                                <div class="flex flex-wrap items-center gap-2 bg-white p-2 rounded border border-gray-200">
+                                    <span class="text-xs font-bold text-gray-400 pl-2">START</span>
+                                    <select id="start-hour" class="form-input py-1 px-2 w-auto"></select>
+                                    <select id="start-minute" class="form-input py-1 px-2 w-auto"></select>
+                                    <select id="start-ampm" class="form-input py-1 px-2 w-auto"><option>AM</option><option>PM</option></select>
                                     
-                                    <div class="flex flex-wrap items-center gap-3 bg-white p-3 rounded border">
-                                        <div class="flex items-center space-x-1">
-                                            <span class="text-xs font-bold text-gray-500">START</span>
-                                            <select id="start-hour" class="p-1 border rounded bg-gray-50"></select>
-                                            <select id="start-minute" class="p-1 border rounded bg-gray-50"></select>
-                                            <select id="start-ampm" class="p-1 border rounded bg-gray-50"><option value="AM">AM</option><option value="PM">PM</option></select>
-                                        </div>
-                                        <span class="text-gray-400">→</span>
-                                        <div class="flex items-center space-x-1">
-                                            <span class="text-xs font-bold text-gray-500">END</span>
-                                            <select id="end-hour" class="p-1 border rounded bg-gray-50"></select>
-                                            <select id="end-minute" class="p-1 border rounded bg-gray-50"></select>
-                                            <select id="end-ampm" class="p-1 border rounded bg-gray-50"><option value="AM">AM</option><option value="PM">PM</option></select>
-                                        </div>
-                                        <button type="button" onclick="addTimeSlot()" class="ml-auto bg-indigo-100 text-indigo-700 text-sm font-bold px-4 py-1 rounded hover:bg-indigo-200 transition">Add Slot</button>
-                                    </div>
-                                    <p id="time-slot-error" class="text-sm text-red-500 mt-2 hidden">Invalid time.</p>
+                                    <span class="text-gray-300 mx-2">|</span>
+                                    
+                                    <span class="text-xs font-bold text-gray-400">END</span>
+                                    <select id="end-hour" class="form-input py-1 px-2 w-auto"></select>
+                                    <select id="end-minute" class="form-input py-1 px-2 w-auto"></select>
+                                    <select id="end-ampm" class="form-input py-1 px-2 w-auto"><option>AM</option><option>PM</option></select>
+                                    
+                                    <button type="button" onclick="addTimeSlot()" class="ml-auto bg-indigo-100 text-indigo-700 hover:bg-indigo-200 px-4 py-1.5 rounded text-xs font-bold transition-colors">Add Slot</button>
                                 </div>
+                            </div>
 
-                                <div id="editor-grid-container" class="overflow-x-auto border rounded-lg mb-4"></div>
-                                <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-3 rounded-lg hover:bg-indigo-700 shadow-lg transition transform active:scale-95">Save Timetable</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="event-adder-view" class="view-content hidden">
-                    <header class="mb-6">
-                        <h2 class="text-3xl font-bold text-gray-800">Add Event</h2>
-                        <p class="text-gray-500">Create new campus events or deadlines.</p>
-                    </header>
-
-                    <div class="max-w-2xl bg-white p-8 rounded-xl shadow-sm border border-gray-200">
-                        <form id="event-form" onsubmit="handleEventSubmit(event)" class="space-y-5">
-                            <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-1">Category</label>
-                                <select id="event-type" onchange="toggleEventFormFields(this.value)" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 bg-white">
-                                    <option value="" disabled selected>-- Select Type --</option>
-                                    <option value="Task">Task / Deadline</option> 
-                                    <option value="CulturalEvent">Cultural Event</option>
-                                    <option value="ActivityEvent">Activity Event</option>
-                                    <option value="Exam">Exam</option>
-                                    <option value="Assignment">Assignment</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-1">Title</label>
-                                <input type="text" id="event-name" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500" placeholder="e.g., Annual Tech Fest">
-                            </div>
-                            <div class="flex flex-col sm:flex-row gap-4">
-                                <div class="flex-1">
-                                    <label class="block text-sm font-bold text-gray-700 mb-1">Date</label>
-                                    <input type="date" id="event-date" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500">
-                                </div>
-                                <div class="flex-1">
-                                    <label class="block text-sm font-bold text-gray-700 mb-1">Time</label>
-                                    <input type="time" id="event-time" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500">
-                                </div>
-                            </div>
-                            <div class="flex items-center space-x-3 bg-pink-50 p-3 rounded-lg border border-pink-100">
-                                <input type="checkbox" id="show-countdown" class="h-5 w-5 text-pink-600 rounded focus:ring-pink-500" checked>
-                                <div class="flex flex-col">
-                                    <label for="show-countdown" class="text-sm font-bold text-gray-800 cursor-pointer">High Priority (Countdown)</label>
-                                    <span class="text-xs text-gray-500">These events will appear at the top of the dashboard.</span>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-1">Registration / Link</label>
-                                <div class="relative">
-                                    <i data-lucide="link" class="absolute left-3 top-3.5 w-5 h-5 text-gray-400"></i>
-                                    <input type="url" id="event-link" class="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500" placeholder="https://..." required>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-1">Description</label>
-                                <textarea id="event-description" rows="3" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"></textarea>
-                            </div>
-                            <button type="submit" class="w-full bg-pink-600 text-white font-bold py-3 rounded-lg hover:bg-pink-700 shadow-md transition transform active:scale-95">Create Event</button>
+                            <div id="editor-grid-container" class="overflow-x-auto border border-gray-200 rounded-lg"></div>
+                            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg shadow-sm transition-colors">Save Timetable</button>
                         </form>
                     </div>
                 </div>
-
             </div>
+
+            <div id="event-adder-view" class="view-content hidden">
+                <header class="mb-8">
+                    <h2 class="text-3xl font-extrabold text-gray-900">Add Event</h2>
+                    <p class="text-gray-500 text-sm mt-1">Create new tasks, deadlines, or campus events.</p>
+                </header>
+
+                <div class="max-w-2xl bg-white p-8 rounded-xl shadow-sm border border-gray-200">
+                    <form id="event-form" onsubmit="handleEventSubmit(event)" class="space-y-5">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Category</label>
+                            <select id="event-type" onchange="toggleEventFormFields(this.value)" required class="form-input bg-white">
+                                <option value="" disabled selected>-- Select Type --</option>
+                                <option value="Task">Task / Deadline</option> 
+                                <option value="CulturalEvent">Cultural Event</option>
+                                <option value="ActivityEvent">Activity Event</option>
+                                <option value="Exam">Exam</option>
+                                <option value="Assignment">Assignment</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Title</label>
+                            <input type="text" id="event-name" required class="form-input" placeholder="e.g. Project Submission">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">Date</label>
+                                <input type="date" id="event-date" required class="form-input">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">Time</label>
+                                <input type="time" id="event-time" class="form-input">
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-3 p-3 bg-pink-50 border border-pink-100 rounded-lg">
+                            <input type="checkbox" id="show-countdown" checked class="w-5 h-5 text-pink-600 rounded border-gray-300 focus:ring-pink-500">
+                            <div>
+                                <label for="show-countdown" class="block text-sm font-bold text-gray-900 cursor-pointer">High Priority</label>
+                                <span class="text-xs text-gray-500">Shows a countdown timer on the dashboard.</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Link / Resource</label>
+                            <div class="relative">
+                                <i data-lucide="link" class="absolute left-3 top-3 w-4 h-4 text-gray-400"></i>
+                                <input type="url" id="event-link" class="form-input pl-10" placeholder="https://..." required>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Description</label>
+                            <textarea id="event-description" rows="3" class="form-input"></textarea>
+                        </div>
+                        
+                        <button type="submit" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 rounded-lg shadow-sm transition-colors">Create</button>
+                    </form>
+                </div>
+            </div>
+
         </main>
     </div>
 
-    <script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+
+        // Logic reused to keep Sidebar Name consistent
+        const firebaseConfig = {
+            apiKey: "AIzaSyDCOT7bvPnU4zhOAkOG_nFxSLP0f58itgo",
+            authDomain: "veddit-a03a0.firebaseapp.com",
+            projectId: "veddit-a03a0",
+            storageBucket: "veddit-a03a0.firebasestorage.app",
+            messagingSenderId: "841975514674",
+            appId: "1:841975514674:web:3dcea2a6931cde3bfcde2b",
+            measurementId: "G-73VBEQ32GT"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        auth.onAuthStateChanged(async (user) => {
+            const el = document.getElementById('nav-user-name');
+            if(user) {
+                try {
+                    const snap = await getDoc(doc(db, 'users', user.uid));
+                    if(snap.exists()) el.innerText = snap.data().fullName || snap.data().username || 'My Profile';
+                } catch(e) { console.error(e); }
+            } else {
+                el.innerText = 'Guest';
+            }
+        });
+        
         lucide.createIcons();
     </script>
 

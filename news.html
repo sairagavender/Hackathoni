@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Socio — Veddit</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
+
+    <style>
+      /* --- GLOBAL LAYOUT --- */
+      :root {
+        --primary: #4f46e5;
+        --text: #1f2937;
+        --bg: #f8f8f8;
+        --border: #e5e7eb;
+        --text-muted: #6b7280;
+      }
+
+      body {
+        margin: 0;
+        background-color: var(--bg);
+        font-family: "Inter", sans-serif;
+        height: 100vh;
+        display: flex; /* Flex layout for Sidebar + Content */
+        overflow: hidden; /* Prevent body scroll */
+      }
+
+      /* --- VERTICAL NAVBAR STYLES --- */
+      .navbar {
+        width: 60px; /* Collapsed width */
+        height: 100vh;
+        background: white;
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 50; /* Above content */
+        box-shadow: 4px 0 15px rgba(0,0,0,0.05);
+        position: relative;
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+
+      .navbar:hover {
+        width: 260px; /* Expanded width */
+      }
+
+      /* Collapsed Arrow */
+      .nav-collapsed-arrow {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: var(--text-muted);
+        transition: opacity 0.2s, transform 0.3s;
+        pointer-events: none;
+      }
+
+      .navbar:hover .nav-collapsed-arrow {
+        opacity: 0;
+        transform: translate(-50%, -50%) rotate(180deg);
+      }
+
+      /* Expanded Content */
+      .nav-expanded-content {
+        opacity: 0;
+        display: flex;
+        flex-direction: column;
+        width: 260px;
+        height: 100%;
+        padding: 20px;
+        transition: opacity 0.2s ease-in;
+        pointer-events: none;
+      }
+
+      .navbar:hover .nav-expanded-content {
+        opacity: 1;
+        pointer-events: auto;
+        transition-delay: 0.1s;
+      }
+
+      /* User Brand */
+      .user-brand {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        color: var(--text);
+        margin-bottom: 30px;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+
+      .logo-icon {
+        width: 40px;
+        height: 40px;
+        background: var(--primary);
+        color: white;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .icon{
+        position: relative;
+        right: 5%;
+      }
+      .user-name-nav {
+        margin-left: 12px;
+        font-weight: 700;
+        font-size: 16px;
+      }
+
+      /* Links */
+      .nav-links-container {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .nav-link {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        color: var(--text-muted);
+        padding: 12px 15px;
+        border-radius: 8px;
+        transition: 0.2s;
+        white-space: nowrap;
+      }
+
+      .nav-link i {
+        min-width: 20px;
+        height: 20px;
+        margin-right: 15px;
+      }
+
+      .nav-text {
+        font-weight: 600;
+        font-size: 15px;
+      }
+
+      .nav-link:hover {
+        background-color: #eef2ff;
+        color: var(--primary);
+      }
+
+      /* --- PAGE SPECIFIC STYLES --- */
+      .content-wrapper {
+        flex: 1;
+        height: 100vh;
+        overflow-y: auto; /* Scroll ONLY the content area */
+        position: relative;
+      }
+
+      .modal-content-area {
+        max-height: 80vh;
+        overflow-y: auto;
+      }
+
+      /* Animations */
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.2; }
+      }
+      .live-dot {
+        display: inline-block; width: 8px; height: 8px;
+        background-color: #ef4444; border-radius: 50%;
+        animation: pulse 1.5s infinite; margin-left: 4px;
+      }
+
+      @keyframes marquee {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+      }
+      .marquee-track {
+        display: flex; width: max-content;
+        animation: marquee 40s linear infinite;
+      }
+      .marquee-container:hover .marquee-track { animation-play-state: paused; }
+
+      .video-container {
+        position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; background-color: #1f2937;
+      }
+      .video-container iframe {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      }
+    </style>
+  </head>
+  <body class="font-sans text-gray-900">
+
+    <nav class="navbar">
+        <div class="nav-collapsed-arrow">
+            <i data-lucide="arrow-right" style="width:24px; height:24px;"></i>
+        </div>
+
+        <div class="nav-expanded-content">
+            <a href="profile.html" class="user-brand">
+                <div class="logo-icon"><i data-lucide="user"></i></div>
+                <span class="user-name-nav" id="nav-user-name">Loading...</span>
+            </a>
+            
+            <div class="nav-links-container">
+                <a href="index.html" class="nav-link">
+                    <i data-lucide="home"></i>
+                    <span class="nav-text">Home</span>
+                </a>
+                <a href="veddit.html" class="nav-link">
+                    <i data-lucide="message-circle"></i>
+                    <span class="nav-text">Veddit</span>
+                </a>
+                <a href="news.html" class="nav-link" style="background-color: #eef2ff; color: var(--primary);">
+                    <i data-lucide="newspaper"></i>
+                    <span class="nav-text">Socio</span>
+                </a>
+                <a href="calendram.html" class="nav-link">
+                    <i data-lucide="coffee"></i>
+                    <span class="nav-text">Lounge</span>
+                </a>
+                <a href="events.html" class="nav-link">
+                    <i data-lucide="ticket"></i>
+                    <span class="nav-text">Campus Buzz</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="content-wrapper custom-scrollbar">
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="space-y-10">
+            
+            <section>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-2xl font-bold text-gray-800">Global Pulse</h2>
+                <span class="text-sm text-gray-500 flex items-center">
+                Live Updates <span class="live-dot"></span>
+                </span>
+            </div>
+            <br>
+            <div id="global-pulse-container" class="marquee-container overflow-hidden relative w-full"></div>
+            </section>
+
+            <section>
+            <h2 class="text-2xl font-bold text-gray-800 flex items-center mb-4">
+                <i data-lucide="youtube" class="w-6 h-6 mr-2 text-red-600"></i>
+                Vedam Tech Featured Videos
+            </h2>
+            <br><br>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-200">
+                <div class="video-container">
+                    <iframe src="https://www.youtube.com/embed/eoMhcdstM8s?si=HyfkkVJOaXeXx0pc" title="YouTube" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-200">
+                <div class="video-container">
+                    <iframe src="https://www.youtube.com/embed/btyUEzHTEVg?si=Se84g51yzkANnAUs" title="YouTube" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+                </div>
+            </div>
+            </section>
+
+            <section>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+                <i data-lucide="award" class="w-6 h-6 mr-2 text-red-500"></i>
+                Campus Chronicles
+                </h2>
+                <span class="text-sm text-gray-500">Official Blog</span>
+            </div>
+            <div id="campus-chronicles-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+            </section>
+
+            <section class="text-center mt-12 pt-8 border-t border-gray-200">
+            <h3 class="text-lg font-bold text-gray-800 mb-6">Connect with Us</h3>
+            <div class="flex flex-wrap justify-center gap-8 pb-8">
+                <a href="https://www.instagram.com/vedamschooloftech_official/" target="_blank" class="text-pink-600 hover:text-pink-700 transition-colors transform hover:scale-110 duration-200"><i data-lucide="instagram" class="w-8 h-8"></i></a>
+                <a href="#" target="_blank" class="text-blue-700 hover:text-blue-800 transition-colors transform hover:scale-110 duration-200"><i data-lucide="linkedin" class="w-8 h-8"></i></a>
+                <a href="https://x.com/vedamschooltech/status/1927369901909409990" target="_blank" class="text-gray-800 hover:text-black transition-colors transform hover:scale-110 duration-200"><i data-lucide="twitter" class="w-8 h-8"></i></a>
+                <a href="https://www.youtube.com/@VedamSchoolofTech_Official" target="_blank" class="text-red-600 hover:text-red-700 transition-colors transform hover:scale-110 duration-200"><i data-lucide="youtube" class="w-8 h-8"></i></a>
+                <a href="#" target="_blank" class="text-blue-600 hover:text-blue-700 transition-colors transform hover:scale-110 duration-200"><i data-lucide="facebook" class="w-8 h-8"></i></a>
+            </div>
+            </section>
+        </div>
+        </main>
+    </div>
+
+    <div id="news-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl transform transition-all">
+        <div class="modal-content-area p-6 flex flex-col">
+          <div class="flex justify-between items-start mb-4">
+            <h2 id="modal-title" class="text-2xl font-bold text-gray-900 leading-tight pr-10">Title</h2>
+            <button onclick="closeModal()" class="p-1 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"><i data-lucide="x" class="w-5 h-5 text-gray-600"></i></button>
+          </div>
+          <img id="modal-image" src="" alt="News Image" class="w-full h-48 object-cover rounded-lg mb-4 bg-gray-200" onerror="this.src='https://placehold.co/600x200?text=No+Image'"/>
+          <div class="flex items-center text-sm text-gray-500 mb-4 space-x-3">
+            <span id="modal-source" class="font-semibold text-indigo-600"></span>
+            <span>•</span>
+            <span id="modal-time"></span>
+          </div>
+          <p id="modal-content" class="text-gray-700 text-base leading-relaxed mb-6"></p>
+          <a id="modal-read-more" href="#" target="_blank" class="inline-flex items-center text-sm font-bold text-white bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg transition-colors self-start">Read Full Article <i data-lucide="external-link" class="w-4 h-4 ml-2"></i></a>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // --- FIREBASE CONFIG (For User Profile Name in Nav) ---
+      const firebaseConfig = {
+        apiKey: "AIzaSyDCOT7bvPnU4zhOAkOG_nFxSLP0f58itgo",
+        authDomain: "veddit-a03a0.firebaseapp.com",
+        projectId: "veddit-a03a0",
+        storageBucket: "veddit-a03a0.firebasestorage.app",
+        messagingSenderId: "841975514674",
+        appId: "1:841975514674:web:3dcea2a6931cde3bfcde2b",
+        measurementId: "G-73VBEQ32GT"
+      };
+
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore();
+      const auth = firebase.auth();
+
+      // Navbar User Name Logic
+      auth.onAuthStateChanged(async (user) => {
+        const nameEl = document.getElementById('nav-user-name');
+        if (user) {
+            try {
+                const docSnap = await db.collection("users").doc(user.uid).get();
+                if (docSnap.exists) {
+                    nameEl.innerText = docSnap.data().fullName || docSnap.data().username || "My Profile";
+                }
+            } catch (e) {
+                console.error("Error fetching user", e);
+            }
+        } else {
+            nameEl.innerText = "Guest";
+        }
+      });
+
+      // --- DATA & CONTENT LOGIC ---
+      const GLOBAL_PULSE_DATA = [
+        { id: 1, title: "AI Revolution in EdTech", source: "USD Online", time: "2h ago", image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdXMvR5qmp6UJXtX2xx3ZLXOVk_emUBoHtwCNyzp53L8H1st_PNC_ktjMYkCdWjLcV3XI&usqp=CAU", summary: "AI models are changing education delivery.", link: "#" },
+        { id: 2, title: "New Python Version Released", source: "RealPython", time: "5h ago", image: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&q=80&w=300", summary: "Python 3.12 brings improvements.", link: "#" },
+        { id: 3, title: "SpaceX Starship", source: "Teslarati", time: "8h ago", image: "https://images.newscientist.com/wp-content/uploads/2025/08/27135853/SEI_263490562.jpg", summary: "SpaceX pushes forward with V3 vehicle.", link: "#" },
+        { id: 4, title: "Cybersecurity 2026", source: "Simplilearn", time: "1d ago", image: "https://www.hostnoc.com/wp-content/uploads/2025/09/thumbnail.jpg", summary: "Experts predict rise in AI social engineering.", link: "#" }
+      ];
+
+      const CAMPUS_CHRONICLES_DATA = [
+        { id: 5, title: "Top 5 Coding Hacks", summary: "Boost productivity with VS Code tips.", source: "Tech Club", time: "2 days ago", image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR9KZ8tcFmJvZE_DarG8OnLBQ_UGNYZ7gEEcxi9ZT7xxdBs4RcbU4H5VJEWQO8uYhOlEN4&usqp=CAU", link: "#" },
+        { id: 6, title: "Campus Fest Highlights", summary: "Music night was a blast! Check photos.", source: "Media Team", time: "1 week ago", image: "https://res.cloudinary.com/purnesh/image/upload/f_auto/v1486462211/hansraj-college%2Cjpg00.jpg", link: "#" },
+        { id: 7, title: "Scholarship Deadline", summary: "Application closes next Friday.", source: "Admissions", time: "3 days ago", image: "https://placehold.co/600x400/805ad5/ffffff?text=Scholarship", link: "#" },
+        { id: 8, title: "Library Expansion", summary: "500 new eBooks added.", source: "Library", time: "4 days ago", image: "https://placehold.co/600x400/4299e1/ffffff?text=Library", link: "#" }
+      ];
+
+      function createSlideHTML(item) {
+        return `
+            <div onclick="openModal(${item.id})" class="flex-shrink-0 w-[304px] bg-white rounded-xl shadow-md overflow-hidden cursor-pointer mr-6 border border-gray-100">
+                <div class="relative h-32 bg-gray-200" style="background-image: url('${item.image}'); background-size: cover; background-position: center;">
+                    <div class="absolute inset-0 bg-black/20"></div>
+                </div>
+                <div class="p-3">
+                    <h3 class="font-bold text-gray-900 line-clamp-2">${item.title}</h3>
+                    <div class="flex justify-between text-xs text-gray-500 mt-1"><span>${item.source}</span><span>${item.time}</span></div>
+                </div>
+            </div>`;
+      }
+
+      function renderGlobalPulse() {
+        const container = document.getElementById("global-pulse-container");
+        const items = GLOBAL_PULSE_DATA.map(createSlideHTML).join("");
+        container.innerHTML = `<div class="marquee-track py-2">${items}${items}</div>`;
+      }
+
+      function renderCampusChronicles() {
+        const container = document.getElementById("campus-chronicles-container");
+        container.innerHTML = CAMPUS_CHRONICLES_DATA.map(item => `
+            <div onclick="openModal(${item.id})" class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-lg flex flex-col cursor-pointer">
+                <div class="w-full h-32 mb-3 rounded-md overflow-hidden bg-gray-100">
+                    <img src="${item.image}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/400x300?text=No+Image'">
+                </div>
+                <div class="flex flex-col flex-grow">
+                    <h3 class="text-lg font-extrabold text-gray-900 mb-1 leading-snug">${item.title}</h3>
+                    <p class="text-xs text-gray-700 mb-3 line-clamp-3">${item.summary}</p>
+                </div>
+                <div class="flex justify-between items-center text-xs text-gray-500 pt-2 border-t border-gray-100">
+                    <span class="font-medium text-indigo-600">${item.source}</span>
+                    <span>${item.time}</span>
+                </div>
+            </div>
+        `).join("");
+      }
+
+      function openModal(id) {
+        const item = [...GLOBAL_PULSE_DATA, ...CAMPUS_CHRONICLES_DATA].find(i => i.id === id);
+        if(!item) return;
+        document.getElementById("modal-title").textContent = item.title;
+        document.getElementById("modal-image").src = item.image;
+        document.getElementById("modal-source").textContent = item.source;
+        document.getElementById("modal-time").textContent = item.time;
+        document.getElementById("modal-content").textContent = item.summary;
+        document.getElementById("modal-read-more").href = item.link;
+        document.getElementById("news-modal").classList.remove("hidden");
+        lucide.createIcons();
+      }
+
+      function closeModal() { document.getElementById("news-modal").classList.add("hidden"); }
+      document.getElementById("news-modal").addEventListener("click", e => { if(e.target === document.getElementById("news-modal")) closeModal(); });
+
+      document.addEventListener("DOMContentLoaded", () => {
+        renderGlobalPulse();
+        renderCampusChronicles();
+        lucide.createIcons();
+      });
+    </script>
+  </body>
+</html>

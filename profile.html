@@ -3,571 +3,497 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Student Profile - Personal & Academic</title>
-<!-- Firebase SDKs -->
+<title>My Profile — Veddit</title>
+
 <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-storage-compat.js"></script>
-<!-- Font Styles -->
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+
+<script src="https://unpkg.com/lucide@latest"></script>
+
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
+    /* --- 1. GLOBAL STYLES --- */
+    :root {
+        --primary: #4f46e5;
+        --primary-hover: #4338ca;
+        --bg: #f3f4f6;
+        --text-main: #1f2937;
+        --text-muted: #6b7280;
+        --border: #e5e7eb;
+    }
 
-body {
-font-family: 'Inter', sans-serif;
-background-color: #F1F5F9;
-color: #1E293B;
-padding-top: 60px; /* Space for back button */
-}
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
-/* Back Button */
-.back-btn-container {
-position: absolute;
-top: 20px;
-left: 20px;
-z-index: 100;
-}
+    body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        background-color: var(--bg);
+        color: var(--text-main);
+        height: 100vh;
+        display: flex;
+        overflow: hidden;
+    }
 
-.back-btn {
-display: inline-flex;
-align-items: center;
-gap: 8px;
-text-decoration: none;
-color: #1E293B;
-font-weight: 600;
-background: #FFFFFF;
-padding: 10px 20px;
-border-radius: 30px;
-box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-transition: all 0.2s ease;
-}
+    /* --- 2. VERTICAL NAVBAR (Enhanced) --- */
+    .navbar {
+        width: 80px; /* Collapsed width */
+        height: 100vh;
+        background: white;
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        padding-top: 20px;
+        transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 100;
+        flex-shrink: 0;
+        overflow: hidden; /* Hide text when collapsed */
+    }
 
-.back-btn:hover {
-transform: translateX(-4px);
-box-shadow: 0 4px 12px rgba(0,0,0,0.12);
-color: #3B82F6;
-}
+    .navbar:hover {
+        width: 260px; /* Expanded width */
+    }
 
-/* Main Content */
-.main-content { max-width:1280px; margin:0 auto; padding:2rem; opacity:0; transition: opacity .5s; }
-.main-content.loaded { opacity:1; }
+    /* Brand / User Icon Section */
+    .user-brand {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        color: var(--text-main);
+        width: 100%;
+        height: 60px;
+        padding-left: 20px; /* Aligns icon center in collapsed state */
+        margin-bottom: 20px;
+        cursor: pointer;
+        white-space: nowrap;
+    }
 
-/* Top Section (Profile Card Wrapper) */
-.top-section { 
-display: block;
-position: relative;
-background: #FFFFFF;
-border-radius: 12px;
-box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-overflow: hidden;
-margin-bottom: 2rem;
-padding-bottom: 1.5rem;
-}
+    .logo-icon {
+        width: 40px;
+        height: 40px;
+        background: var(--primary);
+        color: white;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: 0.3s;
+    }
 
-/* Banner Section */
-.profile-banner {
-height: 200px;
-width: 100%;
-background-image: url('https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=2029&auto=format&fit=crop');
-background-size: cover;
-background-position: center;
-position: relative;
-}
+    .user-name-nav {
+        margin-left: 16px;
+        font-weight: 700;
+        font-size: 16px;
+        opacity: 0;
+        transition: opacity 0.2s ease-in;
+    }
 
-.edit-banner-btn {
-position: absolute;
-top: 20px;
-right: 20px;
-background: #FFFFFF;
-border: none;
-border-radius: 50%;
-width: 36px;
-height: 36px;
-cursor: pointer;
-display: flex;
-align-items: center;
-justify-content: center;
-box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-transition: transform 0.2s;
-z-index: 10;
-}
-.edit-banner-btn:hover { transform: scale(1.1); }
+    .navbar:hover .user-name-nav {
+        opacity: 1;
+        transition-delay: 0.1s;
+    }
 
-/* Profile Info Area (Photo + Text) */
-.profile-info-area {
-padding: 0 2rem;
-position: relative;
-display: flex;
-flex-direction: column;
-align-items: flex-start;
-}
+    /* Navigation Links */
+    .nav-links-container {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+    }
 
-.profile-photo-container { 
-position:relative; 
-width:160px; 
-height:160px; 
-margin-top: -80px; /* Overlap the banner */
-margin-bottom: 1rem;
-z-index: 5;
-}
+    .nav-link {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        color: var(--text-muted);
+        height: 50px;
+        padding-left: 28px; /* Precision centering: 80px width - 24px icon / 2 approx */
+        width: 100%;
+        transition: background-color 0.2s, color 0.2s;
+        position: relative;
+        white-space: nowrap;
+    }
 
-.profile-photo {
-width:100%; 
-height:100%; 
-border-radius:50%; 
-object-fit:cover; 
-border: 6px solid #FFFFFF; /* White border to separate from banner */
-background:#E0E7FF; 
-display:flex; 
-align-items:center; 
-justify-content:center; 
-font-size:3.5rem; 
-color:#3B82F6;
-box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
+    .nav-link i {
+        min-width: 24px;
+        height: 24px;
+        margin-right: 20px; /* Space between icon and text */
+    }
+    
+    .nav-text {
+        opacity: 0;
+        
+        transition: 0.2s;
+        font-weight: 600;
+        font-size: 15px;
+    }
 
-.upload-photo-btn { 
-position:absolute; 
-bottom: 5px; 
-right: 5px; 
-background:#3B82F6; 
-color:#fff; 
-border: 2px solid #FFFFFF;
-border-radius:50%;
-width:36px; 
-height:36px; 
-cursor:pointer; 
-font-size:1rem; 
-box-shadow:0 2px 4px rgba(0,0,0,0.2); 
-transition: background-color .3s; 
-display: flex;
-align-items: center;
-justify-content: center;
-}
-.upload-photo-btn:hover { background:#2563EB; }
+    /* Hover Effects */
+    .navbar:hover .nav-text { opacity: 1; transform: translateX(0); transition-delay: 0.05s; }
+    
+    .nav-link:hover { background-color: #eef2ff; color: var(--primary); }
+    
+    .nav-link:hover::before { 
+        content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; 
+        background: var(--primary); border-top-right-radius: 4px; border-bottom-right-radius: 4px;
+    }
 
-.student-identity {
-margin-left: 0.5rem;
-}
+    /* --- 3. MAIN CONTENT --- */
+    .main-content {
+        flex: 1;
+        overflow-y: auto;
+        height: 100vh;
+        padding: 2rem;
+        opacity: 0; 
+        transition: opacity .5s;
+    }
+    .main-content.loaded { opacity: 1; }
 
-.student-name { 
-font-family:'Poppins',sans-serif; 
-font-size:1.75rem; 
-font-weight:700; 
-color:#1E293B; 
-text-align:left; 
-line-height: 1.2;
-}
+    /* --- 4. PROFILE CSS --- */
+    .top-section { 
+        background: #FFFFFF; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        overflow: hidden; margin-bottom: 2rem; padding-bottom: 1.5rem; border: 1px solid var(--border);
+    }
+    .profile-banner {
+        height: 220px; width: 100%;
+        background-color: #cbd5e1; background-size: cover; background-position: center; position: relative;
+    }
+    .edit-banner-btn {
+        position: absolute; top: 20px; right: 20px; background: white; border: none;
+        border-radius: 50%; width: 40px; height: 40px; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.2s; z-index: 10;
+    }
+    .edit-banner-btn:hover { transform: scale(1.1); }
+    .profile-info-area { padding: 0 2rem; position: relative; display: flex; flex-direction: column; align-items: flex-start; }
+    .profile-photo-container { 
+        position: relative; width: 140px; height: 140px; margin-top: -70px; margin-bottom: 1rem; z-index: 5;
+    }
+    .profile-photo {
+        width: 100%; height: 100%; border-radius: 50%; object-fit: cover; 
+        border: 5px solid #FFFFFF; background: #eef2ff; 
+        display: flex; align-items: center; justify-content: center; 
+        font-size: 3rem; color: var(--primary); box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .upload-photo-btn { 
+        position: absolute; bottom: 5px; right: 5px; background: var(--primary); color: #fff; 
+        border: 2px solid #FFFFFF; border-radius: 50%; width: 32px; height: 32px; 
+        cursor: pointer; display: flex; align-items: center; justify-content: center;
+        transition: background-color .3s;
+    }
+    .upload-photo-btn:hover { background: var(--primary-hover); }
+    .student-name { font-size: 1.8rem; font-weight: 700; color: var(--text-main); margin-bottom: 4px; }
+    .student-roll { color: var(--text-muted); font-size: 1rem; font-weight: 500; }
 
-.student-roll { 
-color:#64748B; 
-font-size:1rem; 
-margin-top:0.25rem; 
-text-align:left;
-}
+    /* Details Form */
+    .profile-details { background: #fff; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 2rem; border: 1px solid var(--border); }
+    .section-title { font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+    .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+    .info-item { display: flex; flex-direction: column; }
+    .info-label { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .info-value input, .info-value select {
+        width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
+        font-size: 14px; color: var(--text-main); background: #fff; font-family: inherit;
+    }
+    .info-value input:focus, .info-value select:focus { outline: none; border-color: var(--primary); }
+    .info-value input:disabled, .info-value select:disabled { background: #f9fafb; color: #6b7280; cursor: not-allowed; border-color: #e5e7eb; }
 
-/* Profile Details */
-.profile-details { background:#fff; border-radius:12px; padding:2rem; box-shadow:0 4px 12px rgba(0,0,0,0.06); margin-bottom:2rem; }
-.section-title { font-family:'Poppins',sans-serif; font-size:1.25rem; font-weight:600; color:#1E293B; margin-bottom:1.5rem; padding-bottom:.75rem; border-bottom:2px solid #F1F5F9; }
-.info-grid { display:grid; grid-template-columns: repeat(3,1fr); gap:1.5rem; }
-.info-item { display:flex; flex-direction:column; }
-.info-label { font-size:.85rem; color:#64748B; margin-bottom:.5rem; font-weight:500; }
-.info-value { font-size:1rem; color:#1E293B; font-weight:500; display:flex; align-items:center; gap:.5rem; }
-.info-icon { font-size:1.2rem; }
-.info-card-icon { font-size:3.2rem; }
-.edit-profile-btn { margin-top:2rem; padding:.875rem 2rem; background:#3B82F6; color:#fff; border:none; border-radius:8px; font-weight:600; font-size:1rem; cursor:pointer; transition:background-color .3s; }
-.edit-profile-btn:hover { background:#2563EB; }
-.info-value input, .info-value select { width:100%; padding:.5rem; border:2px solid #E2E8F0; border-radius:6px; font-size:1rem; font-family:'Inter',sans-serif; color:#1E293B; transition:border-color .3s; }
-.info-value input:focus, .info-value select:focus { outline:none; border-color:#3B82F6; }
-.info-value input:disabled { background:#F8FAFC; cursor:not-allowed; }
-.edit-mode-buttons { display:none; gap:1rem; margin-top:2rem; }
-.edit-mode-buttons.active { display:flex; }
-.save-btn { flex:1; padding:.875rem; background:#10B981; color:#fff; border:none; border-radius:8px; font-weight:600; font-size:1rem; cursor:pointer; }
-.save-btn:hover{ background:#059669; }
-.cancel-btn { flex:1; padding:.875rem; background:#EF4444; color:#fff; border:none; border-radius:8px; font-weight:600; font-size:1rem; cursor:pointer; }
-.cancel-btn:hover{ background:#DC2626; }
+    /* Action Buttons */
+    .edit-profile-btn {
+        margin-top: 2rem; padding: 10px 24px; background: var(--primary); color: #fff; border: none;
+        border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: 0.2s;
+    }
+    .edit-profile-btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
+    .edit-mode-buttons { display: none; gap: 1rem; margin-top: 2rem; }
+    .edit-mode-buttons.active { display: flex; }
+    .save-btn { flex: 1; padding: 10px; background: #16a34a; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    .cancel-btn { flex: 1; padding: 10px; background: #ef4444; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
 
-.additional-info { background:#fff; border-radius:12px; padding:2rem; box-shadow:0 4px 12px rgba(0,0,0,0.06); }
-.info-cards { display:grid; grid-template-columns: repeat(4,1fr); gap:1.5rem; margin-top:1.5rem; }
-.info-card { background:linear-gradient(135deg,#3B82F6 0%,#2563EB 100%); padding:1.5rem; border-radius:10px; color:#fff; text-align:center; transition:transform .3s; }
-.info-card:hover { transform: translateY(-4px); }
+    .footer { text-align: center; padding: 2rem; color: var(--text-muted); font-size: 13px; }
 
-.footer { background:#1E293B; color:#fff; padding:2rem; text-align:center; margin-top:4rem; }
-.footer-links { display:flex; justify-content:center; gap:2rem; margin-top:1rem; }
-.footer-links a { color:#94A3B8; text-decoration:none; transition:color .3s; }
-.footer-links a:hover { color:#fff; }
+    /* Mobile */
+    @media (max-width: 768px) {
+        .navbar { display: none; }
+        .main-content { padding: 1rem; }
+        .info-grid { grid-template-columns: 1fr; }
+        .profile-photo-container { margin: -70px auto 1rem auto; }
+        .profile-info-area { align-items: center; text-align: center; }
+    }
 
-@media (max-width:1024px) { .info-grid{ grid-template-columns: repeat(2,1fr);} .info-cards{ grid-template-columns: repeat(2,1fr);} }
-@media (max-width:768px) {
-.profile-photo-container { margin: -60px auto 1rem auto; } /* Center photo on mobile */
-.profile-info-area { align-items: center; } /* Center text on mobile */
-.student-name, .student-roll { text-align: center; }
-.student-identity { margin-left: 0; }
-.info-grid{ grid-template-columns:1fr; }
-.info-cards{ grid-template-columns:1fr; }
-}
+    .icon{font-size: 56px; position: relative; bottom: 15%; right: 5%;}
 </style>
 </head>
 <body>
-<!-- Hidden input for file upload -->
-<input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhotoFileSelect(event)" />
-<input type="file" id="bannerInput" accept="image/*" style="display:none" onchange="handleBannerFileSelect(event)" />
 
-<!-- Back Button -->
-<div class="back-btn-container">
-    <a href="index.html" class="back-btn">
-        <span>&larr;</span> Back to Home
-    </a>
-</div>
+    <nav class="navbar">
+        <a href="profile.html" class="user-brand">
+            <div class="logo-icon"><i data-lucide="user"></i></div>
+            <span class="user-name-nav" id="nav-user-name">Loading...</span>
+        </a>
+        
+        <div class="nav-links-container">
+            <a href="index.html" class="nav-link">
+               <div class="icon"> <i data-lucide="home"></i> </div>
+                <span class="nav-text">Home</span>
+            </a>
+            
+            <a href="veddit.html" class="nav-link">
+                <div class="icon"><i data-lucide="message-circle"></i></div>
+                <span class="nav-text">Veddit</span> 
+            </a>
 
-<!-- Main -->
-<main class="main-content">
-<!-- Unified Top Section -->
-<div class="top-section">
-    <!-- LinkedIn Style Banner -->
-    <div class="profile-banner" id="profileBanner">
-        <button class="edit-banner-btn" onclick="uploadBanner()" title="Change Cover Photo">✏️</button>
-    </div>
+            <a href="news.html" class="nav-link">
+                <div class="icon"><i data-lucide="newspaper"></i> </div>
+                <span class="nav-text">Socio</span>
+            </a>
 
-    <!-- Profile Info Overlapping Banner -->
-    <div class="profile-info-area">
-        <div class="profile-photo-container">
-            <div class="profile-photo" id="profilePhoto">👤</div>
-            <button class="upload-photo-btn" onclick="uploadPhoto()">📷</button>
+            <a href="calendram.html" class="nav-link">
+                <div class="icon"><i data-lucide="coffee"></i> </div>
+                <span class="nav-text">Lounge</span> 
+            </a>
+
+            <a href="events.html" class="nav-link">
+               <div class="icon"> <i data-lucide="ticket"></i></div>
+                <span class="nav-text">Campus Buzz</span>
+            </a>
         </div>
-        <div class="student-identity">
-            <div class="student-name" id="displayFullName">Rahul Sharma</div>
-            <div class="student-roll" id="displayRollNumber">Roll No: 2021CSE045</div>
+    </nav>
+
+    <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhotoFileSelect(event)" />
+    <input type="file" id="bannerInput" accept="image/*" style="display:none" onchange="handleBannerFileSelect(event)" />
+
+    <main class="main-content">
+        <div class="top-section">
+            <div class="profile-banner" id="profileBanner">
+                <button class="edit-banner-btn" onclick="uploadBanner()"><i data-lucide="camera" style="width:18px;"></i></button>
+            </div>
+            <div class="profile-info-area">
+                <div class="profile-photo-container">
+                    <div class="profile-photo" id="profilePhoto"><i data-lucide="user" style="width:60px; height:60px;"></i></div>
+                    <button class="upload-photo-btn" onclick="uploadPhoto()"><i data-lucide="upload" style="width:14px;"></i></button>
+                </div>
+                <div class="student-identity">
+                    <div class="student-name" id="displayFullName">Student Name</div>
+                    <div class="student-roll" id="displayRollNumber">Loading...</div>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
 
-<!-- Profile details -->
-<div class="profile-details">
-<h2 class="section-title">Personal Information</h2>
-<div class="info-grid">
-<div class="info-item">
-<span class="info-label">Full Name</span>
-<span class="info-value">
-<span class="info-icon">👤</span>
-<input type="text" id="fullName" value="Rahul Sharma" disabled />
-</span>
-</div>
-<div class="info-item">
-<span class="info-label">Roll Number</span>
-<span class="info-value">
-<span class="info-icon">🎫</span>
-<input type="text" id="rollNumber" value="2021CSE045" disabled />
-</span>
-</div>
-<div class="info-item">
-<span class="info-label">Branch</span>
-<span class="info-value">
-<span class="info-icon">💻</span>
-<select id="branch" disabled>
-<option value="CSE" selected>Computer Science & Engineering</option>
-<option value="ECE">Electronics & Communication</option>
-<option value="ME">Mechanical Engineering</option>
-<option value="CE">Civil Engineering</option>
-<option value="EE">Electrical Engineering</option>
-</select>
-</span>
-</div>
+        <div class="profile-details">
+            <h2 class="section-title">Academic & Personal Details</h2>
+            <div class="info-grid">
+                <div class="info-item"><span class="info-label">Full Name</span><span class="info-value"><input type="text" id="fullName" value="" disabled /></span></div>
+                <div class="info-item"><span class="info-label">Roll Number</span><span class="info-value"><input type="text" id="rollNumber" value="" disabled /></span></div>
+                <div class="info-item">
+                    <span class="info-label">Branch</span>
+                    <span class="info-value">
+                        <select id="branch" disabled>
+                            <option value="CSE">Computer Science (CSE)</option><option value="ECE">Electronics (ECE)</option><option value="ME">Mechanical (ME)</option><option value="CE">Civil (CE)</option><option value="AI">AI & Data Science</option>
+                        </select>
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Year</span>
+                    <span class="info-value">
+                        <select id="year" disabled><option value="1">1st Year</option><option value="2">2nd Year</option><option value="3">3rd Year</option><option value="4">4th Year</option></select>
+                    </span>
+                </div>
+                <div class="info-item"><span class="info-label">Email</span><span class="info-value"><input type="email" id="email" value="" disabled /></span></div>
+                <div class="info-item"><span class="info-label">Phone</span><span class="info-value"><input type="tel" id="phone" value="" disabled /></span></div>
+                <div class="info-item"><span class="info-label">Date of Birth</span><span class="info-value"><input type="date" id="dob" value="" disabled /></span></div>
+                <div class="info-item">
+                    <span class="info-label">Blood Group</span>
+                    <span class="info-value">
+                        <select id="bloodGroup" disabled>
+                            <option value="A+">A+</option><option value="A-">A-</option><option value="B+">B+</option><option value="B-">B-</option><option value="AB+">AB+</option><option value="AB-">AB-</option><option value="O+">O+</option><option value="O-">O-</option>
+                        </select>
+                    </span>
+                </div>
+                <div class="info-item"><span class="info-label">Address</span><span class="info-value"><input type="text" id="address" value="" disabled /></span></div>
+            </div>
 
-<div class="info-item">
-<span class="info-label">Year</span>
-<span class="info-value">
-<span class="info-icon">📅</span>
-<select id="year" disabled>
-<option value="1">1st Year (Semester 1-2)</option>
-<option value="2">2nd Year (Semester 3-4)</option>
-<option value="3" selected>3rd Year (Semester 5-6)</option>
-<option value="4">4th Year (Semester 7-8)</option>
-</select>
-</span>
-</div>
+            <button class="edit-profile-btn" id="editBtn" onclick="toggleEditMode()">Edit Profile</button>
+            <div class="edit-mode-buttons" id="editModeButtons">
+                <button class="save-btn" onclick="saveProfile()">Save Changes</button>
+                <button class="cancel-btn" onclick="cancelEdit()">Cancel</button>
+            </div>
+        </div>
 
-<div class="info-item">
-<span class="info-label">Email Address</span>
-<span class="info-value"><span class="info-icon">📧</span><input type="email" id="email" value="rahul.sharma@college.edu" disabled /></span>
-</div>
-<div class="info-item">
-<span class="info-label">Phone Number</span>
-<span class="info-value"><span class="info-icon">📱</span><input type="tel" id="phone" value="+91 98765 43210" disabled /></span>
-</div>
-<div class="info-item">
-<span class="info-label">Date of Birth</span>
-<span class="info-value"><span class="info-icon">🎂</span><input type="date" id="dob" value="2003-03-15" disabled /></span>
-</div>
-<div class="info-item">
-<span class="info-label">Blood Group</span>
-<span class="info-value"><span class="info-icon">🩸</span>
-<select id="bloodGroup" disabled>
-<option value="A+">A+</option>
-<option value="A-">A-</option>
-<option value="B+">B+</option>
-<option value="B-">B-</option>
-<option value="AB+">AB+</option>
-<option value="AB-">AB-</option>
-<option value="O+" selected>O+</option>
-<option value="O-">O-</option>
-</select>
-</span>
-</div>
-<div class="info-item">
-<span class="info-label">Address</span>
-<span class="info-value"><span class="info-icon">🏠</span><input type="text" id="address" value="Mumbai, Maharashtra" disabled /></span>
-</div>
-</div>
-
-<button class="edit-profile-btn" id="editBtn" onclick="toggleEditMode()">Edit Profile</button>
-<div class="edit-mode-buttons" id="editModeButtons">
-<button class="save-btn" onclick="saveProfile()">Save Changes</button>
-<button class="cancel-btn" onclick="cancelEdit()">Cancel</button>
-</div>
-</div>
-
-
-
-<!-- Footer -->
-<footer class="footer"><p>&copy; 2025 | Your College Name</p><div class="footer-links"><a href="#contact">Contact / Support</a><a href="#calendar">Academic Calendar</a></div></footer>
+        <footer class="footer">&copy; 2025 Vedam School of Technology</footer>
+    </main>
 
 <script>
-// --- FIREBASE CONFIG (Unchanged) ---
-const firebaseConfig = {
-apiKey: "AIzaSyDCOT7bvPnU4zhOAkOG_nFxSLP0f58itgo",
-authDomain: "veddit-a03a0.firebaseapp.com",
-projectId: "veddit-a03a0",
-storageBucket: "veddit-a03a0.firebasestorage.app",
-messagingSenderId: "841975514674",
-appId: "1:841975514674:web:3dcea2a6931cde3bfcde2b",
-measurementId: "G-73VBEQ32GT"
-};
+    const firebaseConfig = {
+        apiKey: "AIzaSyDCOT7bvPnU4zhOAkOG_nFxSLP0f58itgo",
+        authDomain: "veddit-a03a0.firebaseapp.com",
+        projectId: "veddit-a03a0",
+        storageBucket: "veddit-a03a0.firebasestorage.app",
+        messagingSenderId: "841975514674",
+        appId: "1:841975514674:web:3dcea2a6931cde3bfcde2b",
+        measurementId: "G-73VBEQ32GT"
+    };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const auth = firebase.auth();
-const storage = firebase.storage();
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+    const storage = firebase.storage();
 
-let currentUser = null;
-const PROFILE_COLLECTION = 'users';
+    let currentUser = null;
+    const PROFILE_COLLECTION = 'users';
 
-function getProfileDocRef(uid) { return db.collection(PROFILE_COLLECTION).doc(uid); }
+    const displayFullName = document.getElementById('displayFullName');
+    const displayRollNumber = document.getElementById('displayRollNumber');
+    const navUserName = document.getElementById('nav-user-name');
+    const profilePhotoElement = document.getElementById('profilePhoto');
+    const profileBannerElement = document.getElementById('profileBanner');
+    const mainContent = document.querySelector('.main-content');
+    const photoInput = document.getElementById('photoInput');
+    const bannerInput = document.getElementById('bannerInput');
 
-const displayFullName = document.getElementById('displayFullName');
-const displayRollNumber = document.getElementById('displayRollNumber');
-const profilePhotoElement = document.getElementById('profilePhoto');
-const profileBannerElement = document.getElementById('profileBanner');
-const mainContent = document.querySelector('.main-content');
-const photoInput = document.getElementById('photoInput');
-const bannerInput = document.getElementById('bannerInput');
+    function showContent() { mainContent.classList.add('loaded'); }
 
-function showContent() { mainContent.classList.add('loaded'); }
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            currentUser = user;
+            loadProfile(user.uid);
+        } else {
+            window.location.href = "index.html"; 
+        }
+    });
 
-auth.onAuthStateChanged(user => {
-if (user) {
-currentUser = user;
-console.log(`User signed in: ${user.uid}. Loading profile...`);
-loadProfile(user.uid);
-} else {
-currentUser = null;
-auth.signInAnonymously().then(anonUser => {
-currentUser = anonUser.user;
-console.log(`Signed in anonymously: ${currentUser.uid}. Loading profile...`);
-loadProfile(currentUser.uid);
-}).catch(error => {
-console.error("Anonymous sign-in failed:", error);
-showContent();
-});
-}
-});
+    function loadProfile(uid) {
+        db.collection(PROFILE_COLLECTION).doc(uid).get().then(doc => {
+            if (doc.exists) {
+                const data = doc.data();
+                for (const key in data) {
+                    const element = document.getElementById(key);
+                    if (element) element.value = data[key];
+                }
+                const name = data.fullName || data.username || 'Student';
+                displayFullName.textContent = name;
+                navUserName.textContent = name;
+                displayRollNumber.textContent = data.rollNumber ? `Roll No: ${data.rollNumber}` : 'Roll No: --';
 
-// ----------------- PROFILE + UPLOAD CODE -----------------
-function loadProfile(uid) {
-getProfileDocRef(uid).get().then(doc => {
-if (doc.exists) {
-const data = doc.data();
-for (const key in data) {
-const element = document.getElementById(key);
-if (element) element.value = data[key];
-}
-displayFullName.textContent = data.fullName || 'Student Name';
-displayRollNumber.textContent = `Roll No: ${data.rollNumber || 'N/A'}`;
-if (data.photoURL) {
-profilePhotoElement.innerHTML = `<img src="${data.photoURL}" alt="Profile" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
-}
-if (data.bannerURL) {
-    profileBannerElement.style.backgroundImage = `url('${data.bannerURL}')`;
-}
-} else {
-displayRollNumber.textContent = `Roll No: ${document.getElementById('rollNumber').value || 'N/A'}`;
-}
+                if (data.photoURL) profilePhotoElement.innerHTML = `<img src="${data.photoURL}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+                if (data.bannerURL) profileBannerElement.style.backgroundImage = `url('${data.bannerURL}')`;
+            } else {
+                displayFullName.textContent = "New Student";
+                navUserName.textContent = "New Student";
+            }
+        }).catch(e => console.error(e)).finally(() => {
+            showContent();
+            lucide.createIcons();
+        });
+    }
 
-// disable inputs
-['fullName','rollNumber','email','phone','dob','bloodGroup','address','branch','year'].forEach(id => {
-const el = document.getElementById(id);
-if (el) el.disabled = true;
-});
-}).catch(e => {
-console.error("Error loading profile:", e);
-alert('Error loading profile data. Check Firebase permissions.');
-}).finally(() => {
-showContent();
-});
-}
+    let isEditMode = false;
+    let originalValues = {};
 
-function uploadPhoto() {
-if (!currentUser) { alert('Please sign in to upload a photo.'); return; }
-photoInput.click();
-}
+    function toggleEditMode() {
+        isEditMode = true;
+        originalValues = {
+            fullName: document.getElementById('fullName').value,
+            rollNumber: document.getElementById('rollNumber').value,
+            branch: document.getElementById('branch').value,
+            year: document.getElementById('year').value,
+            email: document.getElementById('email').value,
+            phone: document.getElementById('phone').value,
+            dob: document.getElementById('dob').value,
+            bloodGroup: document.getElementById('bloodGroup').value,
+            address: document.getElementById('address').value
+        };
+        document.querySelectorAll('.info-value input, .info-value select').forEach(el => el.disabled = false);
+        document.getElementById('editBtn').style.display = 'none';
+        document.getElementById('editModeButtons').classList.add('active');
+    }
 
-function uploadBanner() {
-if (!currentUser) { alert('Please sign in to upload a banner.'); return; }
-bannerInput.click();
-}
+    async function saveProfile() {
+        if (!currentUser) return;
+        const saveBtn = document.querySelector('.save-btn');
+        saveBtn.disabled = true; saveBtn.textContent = 'Saving...';
 
-async function handlePhotoFileSelect(event) {
-const file = event.target.files[0];
-if (!file) return;
-try {
-profilePhotoElement.innerHTML = `<div class="profile-photo" style="animation: spin 1s linear infinite;">⏳</div>`;
-const photoURL = await uploadImageAndGetURL(file, 'profile_photos');
-if (photoURL) {
-profilePhotoElement.innerHTML = `<img src="${photoURL}" alt="Profile" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
-await getProfileDocRef(currentUser.uid).set({ photoURL: photoURL }, { merge: true });
-alert('✅ Profile photo updated successfully!');
-} else {
-profilePhotoElement.innerHTML = `<div class="profile-photo">👤</div>`;
-alert('❌ Photo upload failed. Check browser console for storage errors.');
-}
-} catch (e) {
-console.error("Upload process failed:", e);
-profilePhotoElement.innerHTML = `<div class="profile-photo">👤</div>`;
-alert('❌ An error occurred during upload: ' + e.message);
-} finally {
-photoInput.value = '';
-}
-}
+        const updatedData = {
+            fullName: document.getElementById('fullName').value,
+            rollNumber: document.getElementById('rollNumber').value,
+            branch: document.getElementById('branch').value,
+            year: document.getElementById('year').value,
+            email: document.getElementById('email').value,
+            phone: document.getElementById('phone').value,
+            dob: document.getElementById('dob').value,
+            bloodGroup: document.getElementById('bloodGroup').value,
+            address: document.getElementById('address').value,
+            username: document.getElementById('fullName').value,
+            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        };
 
-async function handleBannerFileSelect(event) {
-const file = event.target.files[0];
-if (!file) return;
-try {
-const bannerURL = await uploadImageAndGetURL(file, 'banners');
-if (bannerURL) {
-    profileBannerElement.style.backgroundImage = `url('${bannerURL}')`;
-    await getProfileDocRef(currentUser.uid).set({ bannerURL: bannerURL }, { merge: true });
-    alert('✅ Banner updated successfully!');
-} else {
-    alert('❌ Banner upload failed.');
-}
-} catch (e) {
-console.error("Upload process failed:", e);
-alert('❌ An error occurred during upload: ' + e.message);
-} finally {
-bannerInput.value = '';
-}
-}
+        try {
+            await db.collection(PROFILE_COLLECTION).doc(currentUser.uid).set(updatedData, { merge: true });
+            displayFullName.textContent = updatedData.fullName;
+            navUserName.textContent = updatedData.fullName;
+            displayRollNumber.textContent = `Roll No: ${updatedData.rollNumber}`;
+            document.querySelectorAll('.info-value input, .info-value select').forEach(el => el.disabled = true);
+            document.getElementById('editBtn').style.display = 'block';
+            document.getElementById('editModeButtons').classList.remove('active');
+            isEditMode = false;
+            alert('✅ Profile updated!');
+        } catch (e) {
+            alert('Error: ' + e.message);
+        } finally {
+            saveBtn.disabled = false; saveBtn.textContent = 'Save Changes';
+        }
+    }
 
-async function uploadImageAndGetURL(file, folder) {
-try {
-const storageRef = storage.ref();
-const imageRef = storageRef.child(`${folder}/${currentUser.uid}/${Date.now()}_${file.name}`);
-const snapshot = await imageRef.put(file);
-return await snapshot.ref.getDownloadURL();
-} catch (e) {
-console.error("Error uploading image:", e);
-if (e.code === 'storage/unauthorized') {
-alert('❌ UPLOAD FAILED: Firebase Storage permission denied.');
-}
-return null;
-}
-}
+    function cancelEdit() {
+        if (originalValues.fullName !== undefined) {
+            for (const key in originalValues) {
+                const el = document.getElementById(key);
+                if(el) el.value = originalValues[key];
+            }
+        }
+        document.querySelectorAll('.info-value input, .info-value select').forEach(el => el.disabled = true);
+        document.getElementById('editBtn').style.display = 'block';
+        document.getElementById('editModeButtons').classList.remove('active');
+        isEditMode = false;
+    }
 
-// Edit/save/cancel
-let isEditMode = false;
-let originalValues = {};
+    function uploadPhoto() { photoInput.click(); }
+    function uploadBanner() { bannerInput.click(); }
 
-function toggleEditMode() {
-if (!currentUser) { alert('Please sign in or wait for automatic sign-in before editing.'); return; }
-isEditMode = true;
-originalValues = {
-fullName: document.getElementById('fullName').value,
-rollNumber: document.getElementById('rollNumber').value,
-branch: document.getElementById('branch').value,
-year: document.getElementById('year').value,
-email: document.getElementById('email').value,
-phone: document.getElementById('phone').value,
-dob: document.getElementById('dob').value,
-bloodGroup: document.getElementById('bloodGroup').value,
-address: document.getElementById('address').value
-};
-['fullName','email','phone','dob','bloodGroup','address','branch','year'].forEach(id => {
-const el = document.getElementById(id);
-if (el) el.disabled = false;
-});
-document.getElementById('editBtn').style.display = 'none';
-document.getElementById('editModeButtons').classList.add('active');
-}
+    async function handlePhotoFileSelect(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        uploadImageAndGetURL(file, 'profile_photos').then(url => {
+            if(url) {
+                profilePhotoElement.innerHTML = `<img src="${url}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+                db.collection(PROFILE_COLLECTION).doc(currentUser.uid).set({ photoURL: url }, { merge: true });
+            }
+        });
+    }
 
-async function saveProfile() {
-if (!currentUser) return;
-const saveBtn = document.querySelector('.save-btn');
-saveBtn.disabled = true; saveBtn.textContent = 'Saving...';
-const updatedData = {
-fullName: document.getElementById('fullName').value,
-rollNumber: document.getElementById('rollNumber').value,
-branch: document.getElementById('branch').value,
-year: document.getElementById('year').value,
-email: document.getElementById('email').value,
-phone: document.getElementById('phone').value,
-dob: document.getElementById('dob').value,
-bloodGroup: document.getElementById('bloodGroup').value,
-address: document.getElementById('address').value,
-lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-};
-try {
-await getProfileDocRef(currentUser.uid).set(updatedData, { merge: true });
-displayFullName.textContent = updatedData.fullName;
-displayRollNumber.textContent = `Roll No: ${updatedData.rollNumber}`;
-['fullName','rollNumber','email','phone','dob','bloodGroup','address','branch','year'].forEach(id => {
-const el = document.getElementById(id);
-if (el) el.disabled = true;
-});
-document.getElementById('editBtn').style.display = 'block';
-document.getElementById('editModeButtons').classList.remove('active');
-isEditMode = false;
-alert('✅ Profile updated successfully!');
-} catch (e) {
-console.error("Error saving profile:", e);
-alert('Error saving profile changes: ' + e.message);
-} finally {
-saveBtn.disabled = false; saveBtn.textContent = 'Save Changes';
-}
-}
+    async function handleBannerFileSelect(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        uploadImageAndGetURL(file, 'banners').then(url => {
+            if(url) {
+                profileBannerElement.style.backgroundImage = `url('${url}')`;
+                db.collection(PROFILE_COLLECTION).doc(currentUser.uid).set({ bannerURL: url }, { merge: true });
+            }
+        });
+    }
 
-function cancelEdit() {
-// Revert to original values
-if (originalValues.fullName !== undefined) {
-document.getElementById('fullName').value = originalValues.fullName;
-document.getElementById('rollNumber').value = originalValues.rollNumber;
-document.getElementById('branch').value = originalValues.branch;
-document.getElementById('year').value = originalValues.year;
-document.getElementById('email').value = originalValues.email;
-document.getElementById('phone').value = originalValues.phone;
-document.getElementById('dob').value = originalValues.dob;
-document.getElementById('bloodGroup').value = originalValues.bloodGroup;
-document.getElementById('address').value = originalValues.address;
-}
-['fullName','rollNumber','email','phone','dob','bloodGroup','address','branch','year'].forEach(id => {
-const el = document.getElementById(id);
-if (el) el.disabled = true;
-});
-document.getElementById('editBtn').style.display = 'block';
-document.getElementById('editModeButtons').classList.remove('active');
-isEditMode = false;
-}
+    async function uploadImageAndGetURL(file, folder) {
+        try {
+            const ref = storage.ref().child(`${folder}/${currentUser.uid}/${Date.now()}_${file.name}`);
+            const snapshot = await ref.put(file);
+            return await snapshot.ref.getDownloadURL();
+        } catch (e) {
+            console.error(e);
+            alert("Upload failed: " + e.message);
+            return null;
+        }
+    }
+
+    lucide.createIcons();
 </script>
 </body>
 </html>

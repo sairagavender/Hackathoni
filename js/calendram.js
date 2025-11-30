@@ -449,11 +449,31 @@ window.toggleEventFormFields = function (val) {
   if (pl) pl.placeholder = val === "Exam" ? "Syllabus PDF Link..." : "Registration/Info URL...";
 };
 
-function populateTimeSelectors() {
-  if (document.getElementById("start-hour").children.length) return;
-  for (let i = 1; i <= 12; i++) { ["start", "end"].forEach((x) => { document.getElementById(x + "-hour").innerHTML += `<option value="${String(i).padStart(2, "0")}">${i}</option>`; document.getElementById(x + "-minute").innerHTML += `<option value="00">00</option><option value="30">30</option>`; }); }
-  document.getElementById("start-hour").value = "09"; document.getElementById("end-hour").value = "10";
-}
+window.populateTimeSelectors = function() {
+            if (document.getElementById("start-hour").children.length) return;
+            
+            // Hours 1-12
+            for (let i = 1; i <= 12; i++) {
+                const h = String(i).padStart(2, "0");
+                ["start", "end"].forEach(x => {
+                    document.getElementById(x + "-hour").innerHTML += `<option value="${h}">${i}</option>`;
+                });
+            }
+
+            // Minutes 00-55 (Step 5)
+            for (let i = 0; i < 60; i += 5) {
+                const m = String(i).padStart(2, "0");
+                ["start", "end"].forEach(x => {
+                    document.getElementById(x + "-minute").innerHTML += `<option value="${m}">${m}</option>`;
+                });
+            }
+
+            // Defaults
+            document.getElementById("start-hour").value = "09";
+            document.getElementById("end-hour").value = "10";
+            document.getElementById("start-minute").value = "00";
+            document.getElementById("end-minute").value = "00";
+        }
 
 function getEmptySchedule() { return DAYS_OF_WEEK.map((d) => ({ day: d, intervals: timeSlots.map((t) => ({ time: t, subject: "" })) })); }
 

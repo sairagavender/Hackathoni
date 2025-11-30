@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Veddit — Campus Hub</title>
     
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <style>
@@ -13,6 +12,8 @@
             --primary: #4f46e5;
             --text: #1f2937;
             --bg: #f3f4f6;
+            --border: #e5e7eb;
+            --text-muted: #6b7280;
         }
 
         body {
@@ -26,23 +27,66 @@
 
         /* --- 1. LEFT NAVBAR (Animated) --- */
         .navbar {
-            width: 80px;
+            width: 60px; /* Slimmer collapsed width */
             height: 100vh;
             background: white;
-            border-right: 1px solid #e5e7eb;
+            border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
-            align-items: center;
-            padding-top: 20px;
             transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 100;
             box-shadow: 4px 0 15px rgba(0,0,0,0.05);
             position: relative;
+            overflow: hidden;
         }
 
         .navbar:hover {
-            width: 240px;
-            align-items: flex-start; /* Align text left on expand */
+            width: 260px;
+        }
+
+        /* COLLAPSED STATE: Center Arrow */
+        .nav-collapsed-arrow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--text-muted);
+            transition: opacity 0.2s, transform 0.3s;
+            pointer-events: none; /* Let hover pass through */
+        }
+
+        .navbar:hover .nav-collapsed-arrow {
+            opacity: 0;
+            transform: translate(-50%, -50%) rotate(180deg);
+        }
+
+        /* EXPANDED CONTENT: Hidden by default */
+        .nav-expanded-content {
+            opacity: 0;
+            display: flex;
+            flex-direction: column;
+            width: 260px; /* Fixed width to prevent wrapping */
+            height: 100%;
+            padding: 20px;
+            transition: opacity 0.2s ease-in;
+            pointer-events: none; /* Prevent clicks when hidden */
+        }
+
+        .navbar:hover .nav-expanded-content {
+            opacity: 1;
+            pointer-events: auto;
+            transition-delay: 0.1s;
+        }
+
+        /* User Profile Brand */
+        .user-brand {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text);
+            margin-bottom: 30px;
+            cursor: pointer;
+            white-space: nowrap;
         }
 
         .logo-icon {
@@ -54,62 +98,47 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 900;
-            font-size: 20px;
-            margin-bottom: 40px;
             flex-shrink: 0;
-            margin-left: 20px; /* Centered initially */
-            transition: 0.3s;
         }
 
-        .navbar:hover .logo-icon {
-            margin-left: 20px; /* Keep consistent margin */
+        .user-name-nav {
+            margin-left: 12px;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        /* Nav Links */
+        .nav-links-container {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
         }
 
         .nav-link {
             display: flex;
             align-items: center;
             text-decoration: none;
-            color: #6b7280;
-            padding: 15px 20px;
-            width: 100%;
-            box-sizing: border-box;
+            color: var(--text-muted);
+            padding: 12px 15px;
+            border-radius: 8px;
             transition: 0.2s;
-            position: relative;
-            overflow: hidden;
             white-space: nowrap;
         }
 
         .nav-link i {
-            min-width: 24px;
-            height: 24px;
-            margin-right: 20px;
+            min-width: 20px;
+            height: 20px;
+            margin-right: 15px;
         }
 
         .nav-text {
-            opacity: 0;
-            transform: translateX(-10px);
-            transition: 0.2s;
             font-weight: 600;
-        }
-
-        .navbar:hover .nav-text {
-            opacity: 1;
-            transform: translateX(0);
-            transition-delay: 0.1s;
+            font-size: 15px;
         }
 
         .nav-link:hover {
             background-color: #eef2ff;
             color: var(--primary);
-        }
-
-        .nav-link:hover::before {
-            content: '';
-            position: absolute;
-            left: 0; top: 0; bottom: 0;
-            width: 4px;
-            background: var(--primary);
         }
 
         /* --- 2. MAIN CONTENT & HERO --- */
@@ -267,36 +296,53 @@
 </head>
 <body>
 
-    <!-- VERTICAL NAVBAR -->
     <nav class="navbar">
-        <div class="logo-icon">V</div>
-        
-        <div style="flex:1; width:100%; display:flex; flex-direction:column; justify-content:center; gap:10px;">
-            <a href="veddit.html" class="nav-link">
-                <i data-lucide="message-circle"></i>
-                <span class="nav-text">Forum</span>
+        <div class="nav-collapsed-arrow">
+            <i data-lucide="arrow-right" style="width:24px; height:24px;"></i>
+        </div>
+
+        <div class="nav-expanded-content">
+            <a href="profile.html" class="user-brand">
+                <div class="logo-icon"><i data-lucide="user"></i></div>
+                <span class="user-name-nav" id="nav-user-name">My Profile</span>
             </a>
-            <a href="calendram.html" class="nav-link">
-                <i data-lucide="calendar"></i>
-                <span class="nav-text">Calendram</span>
-            </a>
-            <a href="events.html" class="nav-link">
-                <i data-lucide="ticket"></i>
-                <span class="nav-text">Campus Buzz</span>
-            </a>
+            
+            <div class="nav-links-container">
+                <a href="index.html" class="nav-link">
+                    <i data-lucide="home"></i>
+                    <span class="nav-text">Home</span>
+                </a>
+                
+                <a href="veddit.html" class="nav-link">
+                    <i data-lucide="message-circle"></i>
+                    <span class="nav-text">Veddit</span>
+                </a>
+
+                <a href="news.html" class="nav-link">
+                    <i data-lucide="newspaper"></i>
+                    <span class="nav-text">Socio</span>
+                </a>
+
+                <a href="calendram.html" class="nav-link">
+                    <i data-lucide="coffee"></i>
+                    <span class="nav-text">Lounge</span>
+                </a>
+
+                <a href="events.html" class="nav-link">
+                    <i data-lucide="ticket"></i>
+                    <span class="nav-text">Campus Buzz</span>
+                </a>
+            </div>
         </div>
     </nav>
 
-    <!-- TOP RIGHT AUTH -->
     <div class="auth-corner">
-        <a href="signup.html" class="login-btn">
+        <a href="signup.html" id="auth-btn" class="login-btn">
             Login / Signup <i data-lucide="arrow-right" style="width:16px;"></i>
         </a>
     </div>
 
-    <!-- MAIN HERO AREA -->
     <div class="main">
-        <!-- Floating Background Elements -->
         <div class="floating-bg">
             <div class="float-item f1">
                 <i data-lucide="bell"></i> Tech Fest Registration Open
@@ -324,7 +370,65 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDCOT7bvPnU4zhOAkOG_nFxSLP0f58itgo",
+            authDomain: "veddit-a03a0.firebaseapp.com",
+            projectId: "veddit-a03a0",
+            storageBucket: "veddit-a03a0.firebasestorage.app",
+            messagingSenderId: "841975514674",
+            appId: "1:841975514674:web:3dcea2a6931cde3bfcde2b",
+            measurementId: "G-73VBEQ32GT",
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const authBtn = document.getElementById('auth-btn');
+        const navUserName = document.getElementById('nav-user-name');
+
+        // Check Login State
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // 1. Update Auth Button
+                authBtn.innerHTML = `Log Out <i data-lucide="log-out" style="width:16px;"></i>`;
+                authBtn.href = "#"; 
+                authBtn.onclick = (e) => {
+                    e.preventDefault();
+                    if(confirm("Are you sure you want to log out?")) {
+                        signOut(auth).then(() => {
+                            window.location.reload(); 
+                        });
+                    }
+                };
+
+                // 2. Fetch User Name for Sidebar
+                try {
+                    const docSnap = await getDoc(doc(db, "users", user.uid));
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        // Use fullName first, fallback to username
+                        navUserName.innerText = data.fullName || data.username || "My Profile";
+                    }
+                } catch (e) {
+                    console.error("Error fetching user data:", e);
+                }
+
+            } else {
+                // User IS NOT logged in
+                authBtn.innerHTML = `Login / Signup <i data-lucide="arrow-right" style="width:16px;"></i>`;
+                authBtn.href = "signup.html";
+                authBtn.onclick = null;
+                navUserName.innerText = "Guest";
+            }
+            lucide.createIcons(); // Refresh icons
+        });
+
+        // Initial Icon Create
         lucide.createIcons();
     </script>
 </body>
