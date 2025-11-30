@@ -8,7 +8,7 @@ import {
   doc,
   addDoc,
   deleteDoc,
-  updateDoc, // Added updateDoc
+  updateDoc, 
   onSnapshot,
   collection,
   query,
@@ -76,7 +76,9 @@ function initializeAuth() {
       }
 
       startFirestoreListeners();
-      populateTimeSelectors();
+      // Ensure populateTimeSelectors is available globally or call it here directly if moved
+      if(window.populateTimeSelectors) window.populateTimeSelectors();
+      
       document.getElementById("loading-overlay").classList.add("hidden");
       switchView("dashboard");
     } else {
@@ -259,6 +261,19 @@ window.toggleTask = async function(eventId, currentStatus) {
     }
 }
 
+// *** NEW: Delete Event Function ***
+window.deleteEvent = async function(eventId) {
+    if (userRole !== "operator") return alert("Access Denied");
+    if (!confirm("Are you sure you want to delete this event/task?")) return;
+    
+    try {
+        await deleteDoc(doc(db, EVENTS_COLLECTION, eventId));
+    } catch(e) {
+        console.error("Error deleting event:", e);
+        alert("Failed to delete event.");
+    }
+}
+
 function renderUpcomingEvents(events) {
   const container = document.getElementById("upcoming-events");
   if (countdownInterval) clearInterval(countdownInterval);
@@ -316,6 +331,16 @@ function renderUpcomingEvents(events) {
         actionBtn = `<a href="${e.registrationLink}" target="_blank" class="block text-center mt-3 bg-indigo-50 text-indigo-600 text-xs font-bold py-2 rounded hover:bg-indigo-100 transition">Register Now ↗</a>`;
     }
 
+    // *** NEW: Delete Button for Operator ***
+    let deleteBtn = "";
+    if (userRole === "operator") {
+        deleteBtn = `
+            <button onclick="deleteEvent('${e.id}')" class="absolute bottom-3 right-3 text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50" title="Delete">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+        `;
+    }
+
     container.innerHTML += `
       <div id="card-${e.id}" class="relative p-3 rounded-xl border ${cardClass} mb-3 hover:shadow-lg transition-all">
           ${isTask ? actionBtn : ''}
@@ -342,7 +367,7 @@ function renderUpcomingEvents(events) {
               </div>
           </div>
           ${!isTask ? actionBtn : ''}
-      </div>`;
+          ${deleteBtn} </div>`;
   });
 
   if(window.lucide) window.lucide.createIcons();
@@ -449,31 +474,11 @@ window.toggleEventFormFields = function (val) {
   if (pl) pl.placeholder = val === "Exam" ? "Syllabus PDF Link..." : "Registration/Info URL...";
 };
 
-window.populateTimeSelectors = function() {
-            if (document.getElementById("start-hour").children.length) return;
-            
-            // Hours 1-12
-            for (let i = 1; i <= 12; i++) {
-                const h = String(i).padStart(2, "0");
-                ["start", "end"].forEach(x => {
-                    document.getElementById(x + "-hour").innerHTML += `<option value="${h}">${i}</option>`;
-                });
-            }
-
-            // Minutes 00-55 (Step 5)
-            for (let i = 0; i < 60; i += 5) {
-                const m = String(i).padStart(2, "0");
-                ["start", "end"].forEach(x => {
-                    document.getElementById(x + "-minute").innerHTML += `<option value="${m}">${m}</option>`;
-                });
-            }
-
-            // Defaults
-            document.getElementById("start-hour").value = "09";
-            document.getElementById("end-hour").value = "10";
-            document.getElementById("start-minute").value = "00";
-            document.getElementById("end-minute").value = "00";
-        }
+function populateTimeSelectors() {
+  if (document.getElementById("start-hour").children.length) return;
+  for (let i = 1; i <= 12; i++) { ["start", "end"].forEach((x) => { document.getElementById(x + "-hour").innerHTML += `<option value="${String(i).padStart(2, "0")}">${i}</option>`; document.getElementById(x + "-minute").innerHTML += `<option value="00">00</option><option value="30">30</option>`; }); }
+  document.getElementById("start-hour").value = "09"; document.getElementById("end-hour").value = "10";
+}
 
 function getEmptySchedule() { return DAYS_OF_WEEK.map((d) => ({ day: d, intervals: timeSlots.map((t) => ({ time: t, subject: "" })) })); }
 

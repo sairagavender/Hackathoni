@@ -34,9 +34,8 @@
         * { box-sizing: border-box; }
 
         /* --- 2. VERTICAL NAVBAR --- */
-        /* --- 1. LEFT NAVBAR (Animated) --- */
         .navbar {
-            width: 60px; /* Slimmer collapsed width */
+            width: 60px;
             height: 100vh;
             background: white;
             border-right: 1px solid var(--border);
@@ -47,109 +46,45 @@
             box-shadow: 4px 0 15px rgba(0,0,0,0.05);
             position: relative;
             overflow: hidden;
-        }
-
-        .navbar:hover {
-            width: 260px;
-        }
-
-        /* COLLAPSED STATE: Center Arrow */
-        .nav-collapsed-arrow {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: var(--text-muted);
-            transition: opacity 0.2s, transform 0.3s;
-            pointer-events: none; /* Let hover pass through */
-        }
-
-        .navbar:hover .nav-collapsed-arrow {
-            opacity: 0;
-            transform: translate(-50%, -50%) rotate(180deg);
-        }
-
-        /* EXPANDED CONTENT: Hidden by default */
-        .nav-expanded-content {
-            opacity: 0;
-            display: flex;
-            flex-direction: column;
-            width: 260px; /* Fixed width to prevent wrapping */
-            height: 100%;
-            padding: 20px;
-            transition: opacity 0.2s ease-in;
-            pointer-events: none; /* Prevent clicks when hidden */
-        }
-
-        .navbar:hover .nav-expanded-content {
-            opacity: 1;
-            pointer-events: auto;
-            transition-delay: 0.1s;
-        }
-
-        /* User Profile Brand */
-        .user-brand {
-            display: flex;
-            align-items: center;
-            text-decoration: none;
-            color: var(--text);
-            margin-bottom: 30px;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-
-        .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: var(--primary);
-            color: white;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             flex-shrink: 0;
         }
 
-        .user-name-nav {
-            margin-left: 12px;
-            font-weight: 700;
-            font-size: 16px;
-        }
+        .navbar:hover { width: 260px; }
 
-        /* Nav Links */
-        .nav-links-container {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
+        /* Collapsed Arrow */
+        .nav-collapsed-arrow {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); color: var(--text-muted);
+            transition: opacity 0.2s, transform 0.3s; pointer-events: none;
         }
+        .navbar:hover .nav-collapsed-arrow { opacity: 0; transform: translate(-50%, -50%) rotate(180deg); }
 
+        /* Expanded Content */
+        .nav-expanded-content {
+            opacity: 0; display: flex; flex-direction: column;
+            width: 260px; height: 100%; padding: 20px;
+            transition: opacity 0.2s ease-in; pointer-events: none;
+        }
+        .navbar:hover .nav-expanded-content { opacity: 1; pointer-events: auto; transition-delay: 0.1s; }
+
+        .user-brand {
+            display: flex; align-items: center; text-decoration: none;
+            color: var(--text-main); margin-bottom: 30px; cursor: pointer; white-space: nowrap;
+        }
+        .logo-icon {
+            width: 40px; height: 40px; background: var(--primary); color: white;
+            border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .user-name-nav { margin-left: 12px; font-weight: 700; font-size: 16px; }
+
+        .nav-links-container { display: flex; flex-direction: column; gap: 5px; }
         .nav-link {
-            display: flex;
-            align-items: center;
-            text-decoration: none;
-            color: var(--text-muted);
-            padding: 12px 15px;
-            border-radius: 8px;
-            transition: 0.2s;
-            white-space: nowrap;
+            display: flex; align-items: center; text-decoration: none; color: var(--text-muted);
+            padding: 12px 15px; border-radius: 8px; transition: 0.2s; white-space: nowrap;
         }
-
-        .nav-link i {
-            min-width: 20px;
-            height: 20px;
-            margin-right: 15px;
-        }
-
-        .nav-text {
-            font-weight: 600;
-            font-size: 15px;
-        }
-
-        .nav-link:hover {
-            background-color: #eef2ff;
-            color: var(--primary);
-        }
-
+        .nav-link i { min-width: 20px; height: 20px; margin-right: 15px; }
+        .nav-text { font-weight: 600; font-size: 15px; }
+        .nav-link:hover { background-color: #eef2ff; color: var(--primary); }
 
         /* --- 3. MAIN CONTENT --- */
         .main-content { flex: 1; overflow-y: auto; height: 100vh; position: relative; }
@@ -167,14 +102,10 @@
         }
         .add-btn:hover { background: var(--primary-hover); }
 
-        /* Updated Filter Bar to handle more items */
         .filter-bar {
             background: #f9fafb; border-bottom: 1px solid var(--border); padding: 12px 30px;
             display: flex; align-items: center; gap: 10px; overflow-x: auto;
-            scrollbar-width: none; /* Hide scrollbar Firefox */
         }
-        .filter-bar::-webkit-scrollbar { display: none; } /* Hide scrollbar Chrome/Safari */
-
         .filter-btn {
             padding: 6px 16px; border-radius: 50px; font-size: 13px; font-weight: 500;
             border: 1px solid var(--border); background: white; color: var(--text-muted);
@@ -189,38 +120,44 @@
 
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px; }
 
-        /* --- EVENT CARD (NO IMAGE) --- */
+        /* --- EVENT CARD --- */
         .event-card {
             background: white; border-radius: 12px; overflow: hidden; border: 1px solid var(--border);
             transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; display: flex; flex-direction: column; 
             position: relative; height: 100%;
         }
         .event-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); border-color: var(--primary); }
+
+        .card-image {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            background-color: #e5e7eb;
+            border-bottom: 1px solid var(--border);
+        }
         
-        .card-content { padding: 24px; flex: 1; display: flex; flex-direction: column; }
-        
-        .card-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .card-content { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+        .card-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         
         .card-tag {
             background: #eef2ff; color: var(--primary); font-size: 11px; padding: 4px 10px; 
             border-radius: 20px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
         }
-        
         .card-date { font-size: 13px; color: var(--text-muted); font-weight: 500; display: flex; align-items: center; gap: 6px;}
-
-        .card-title { font-size: 20px; font-weight: 700; margin: 0 0 10px 0; color: var(--text-main); line-height: 1.3; }
-        .card-loc { font-size: 14px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; margin-bottom: 16px;}
+        .card-title { font-size: 18px; font-weight: 700; margin: 0 0 8px 0; color: var(--text-main); line-height: 1.3; }
+        .card-loc { font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; margin-bottom: 12px;}
         
         .card-desc-preview { 
             font-size: 14px; color: #4b5563; line-height: 1.5; 
-            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; 
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; 
             margin-top: auto; 
         }
 
         .delete-card-btn {
-            position: absolute; bottom: 20px; right: 20px; background: white; color: var(--danger);
+            position: absolute; top: 10px; right: 10px; background: white; color: var(--danger);
             border: 1px solid var(--border); border-radius: 6px; width: 32px; height: 32px;
             display: none; align-items: center; justify-content: center; z-index: 10; transition: 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .delete-card-btn:hover { background: #fee2e2; border-color: #fee2e2; }
 
@@ -295,7 +232,7 @@
         <div class="nav-expanded-content">
             <a href="profile.html" class="user-brand">
                 <div class="logo-icon"><i data-lucide="user"></i></div>
-                <span class="user-name-nav" id="nav-user-name">My Profile</span>
+                <span class="user-name-nav" id="nav-user-name">Loading...</span>
             </a>
             
             <div class="nav-links-container">
@@ -319,10 +256,14 @@
                     <span class="nav-text">Lounge</span>
                 </a>
 
-                <a href="events.html" class="nav-link">
+                <a href="events.html" class="nav-link" style="background-color: #eef2ff; color: var(--primary);">
                     <i data-lucide="ticket"></i>
                     <span class="nav-text">Campus Buzz</span>
                 </a>
+                <a href="faqs.html" class="nav-link">
+            <i data-lucide="ticket"></i>
+            <span class="nav-text">FAQs</span>
+          </a>
             </div>
         </div>
     </nav>
@@ -420,6 +361,11 @@
                 </div>
 
                 <div class="form-group">
+                    <label>Image URL (Optional)</label>
+                    <input type="url" id="add-image" class="form-input" placeholder="Leave empty for random image">
+                </div>
+
+                <div class="form-group">
                     <label>Registration Link</label>
                     <input type="url" id="add-link" class="form-input" placeholder="https://forms.google.com/..." required>
                 </div>
@@ -439,6 +385,7 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, getDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
+        // FIREBASE CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyDCOT7bvPnU4zhOAkOG_nFxSLP0f58itgo",
             authDomain: "veddit-a03a0.firebaseapp.com",
@@ -457,14 +404,34 @@
         let activeFilter = 'All';
         let currentUserRole = 'student';
 
+        // --- RANDOM IMAGES ARRAY ---
+        const RANDOM_IMAGES = [
+            "assets/plimg.jpeg", // Tech/Events
+            "https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=1000&q=80", // Conference
+            "https://images.unsplash.com/photo-1544531586-fde5298cdd40?auto=format&fit=crop&w=1000&q=80", // Sports
+            "https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=1000&q=80", // Lecture
+            "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=1000&q=80"  // Musical/Stage
+        ];
+
         // --- AUTH & LISTENER ---
         onAuthStateChanged(auth, async (user) => {
+            const nameEl = document.getElementById('nav-user-name');
             if (user) {
                 const uDoc = await getDoc(doc(db, 'users', user.uid));
-                if (uDoc.exists()) currentUserRole = uDoc.data().role || 'student';
-                if (currentUserRole === 'operator') document.getElementById('add-event-btn').style.display = 'flex';
+                if (uDoc.exists()) {
+                    const data = uDoc.data();
+                    currentUserRole = data.role || 'student';
+                    nameEl.innerText = data.fullName || data.username || "My Profile";
+                }
+                
+                // Show Add Button
+                if (currentUserRole === 'operator') {
+                    document.getElementById('add-event-btn').style.display = 'flex';
+                    renderEvents(); 
+                }
             } else {
                 currentUserRole = 'guest';
+                nameEl.innerText = "Guest";
                 document.getElementById('add-event-btn').style.display = 'none';
             }
         });
@@ -477,7 +444,6 @@
 
         // --- UI FUNCTIONS ---
         
-        // Comprehensive Filter List
         const filters = ['All', 'Tech', 'Cultural', 'Sports', 'Academic', 'Activity', 'Exam', 'Assignment', 'Task'];
         const filterContainer = document.getElementById('filter-container');
         filterContainer.innerHTML = `<i data-lucide="filter" style="color: #9ca3af; width: 16px;"></i>`;
@@ -503,17 +469,20 @@
             const filtered = activeFilter === 'All' 
                 ? allEvents 
                 : allEvents.filter(e => {
-                    // Normalize data: get the category or eventType, convert to string
+                    // Check source to ensure we only show Buzz events, NOT calendar tasks
+                    if (e.source !== 'campus_buzz') return false;
+                    
                     const type = (e.category || e.eventType || '').toString();
-                    // Check if the Event Type includes the Filter Name (e.g. "CulturalEvent" includes "Cultural")
                     return type.includes(activeFilter);
                 });
             
-            if (filtered.length === 0) {
+            const finalDisplayList = filtered.filter(e => e.source === 'campus_buzz');
+
+            if (finalDisplayList.length === 0) {
                 emptyState.classList.add('visible');
             } else {
                 emptyState.classList.remove('visible');
-                filtered.forEach(evt => {
+                finalDisplayList.forEach(evt => {
                     const card = document.createElement('div');
                     card.className = "event-card";
                     
@@ -522,11 +491,13 @@
                         deleteHtml = `<button class="delete-card-btn" style="display:flex" onclick="deleteEvent(event, '${evt.id}')"><i data-lucide="trash-2" style="width:16px"></i></button>`;
                     }
 
-                    // Display Name handling
                     const displayTag = evt.category || evt.eventType || 'General';
+                    // Use stored image OR pick a random one if somehow missing (failsafe)
+                    const displayImg = evt.image || RANDOM_IMAGES[0];
 
                     card.innerHTML = `
                         ${deleteHtml}
+                        <img src="${displayImg}" alt="Event Image" class="card-image" onclick="openViewModal('${evt.id}')">
                         <div class="card-content" onclick="openViewModal('${evt.id}')">
                             <div class="card-header-row">
                                 <span class="card-tag">${displayTag}</span>
@@ -552,17 +523,25 @@
             const btn = e.target.querySelector('button[type="submit"]');
             btn.innerText = "Publishing...";
             
+            // Random Image Logic
+            let imgUrl = document.getElementById('add-image').value.trim();
+            if (!imgUrl) {
+                imgUrl = RANDOM_IMAGES[Math.floor(Math.random() * RANDOM_IMAGES.length)];
+            }
+
             try {
                 await addDoc(collection(db, "global_events"), {
                     name: document.getElementById('add-title').value,
                     date: document.getElementById('add-date').value,
                     time: document.getElementById('add-time').value,
                     location: document.getElementById('add-location').value,
-                    category: document.getElementById('add-club').value, // This saves as 'category'
-                    // Also save as eventType for compatibility with Calendram if needed
+                    category: document.getElementById('add-club').value,
                     eventType: document.getElementById('add-club').value, 
                     registrationLink: document.getElementById('add-link').value,
                     description: document.getElementById('add-desc').value,
+                    // Save the image URL (either custom or random)
+                    image: imgUrl,
+                    source: 'campus_buzz', 
                     createdAt: serverTimestamp()
                 });
                 
@@ -609,5 +588,7 @@
         
         lucide.createIcons();
     </script>
+    
+</footer>
 </body>
 </html>

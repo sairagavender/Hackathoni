@@ -1,41 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>My Profile — Veddit</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Profile — Veddit</title>
 
-<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-storage-compat.js"></script>
 
-<script src="https://unpkg.com/lucide@latest"></script>
-
-<style>
-    /* --- 1. GLOBAL STYLES --- */
-    :root {
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+      /* --- 1. GLOBAL STYLES --- */
+      :root {
         --primary: #4f46e5;
         --primary-hover: #4338ca;
         --bg: #f3f4f6;
         --text-main: #1f2937;
         --text-muted: #6b7280;
         --border: #e5e7eb;
-    }
+      }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-    body {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      body {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
         background-color: var(--bg);
         color: var(--text-main);
         height: 100vh;
         display: flex;
         overflow: hidden;
-    }
+      }
 
-    /* --- 2. VERTICAL NAVBAR (Enhanced) --- */
-    .navbar {
+      /* --- 2. VERTICAL NAVBAR (Enhanced) --- */
+      .navbar {
         width: 80px; /* Collapsed width */
         height: 100vh;
         background: white;
@@ -47,14 +50,14 @@
         z-index: 100;
         flex-shrink: 0;
         overflow: hidden; /* Hide text when collapsed */
-    }
+      }
 
-    .navbar:hover {
+      .navbar:hover {
         width: 260px; /* Expanded width */
-    }
+      }
 
-    /* Brand / User Icon Section */
-    .user-brand {
+      /* Brand / User Icon Section */
+      .user-brand {
         display: flex;
         align-items: center;
         text-decoration: none;
@@ -65,9 +68,9 @@
         margin-bottom: 20px;
         cursor: pointer;
         white-space: nowrap;
-    }
+      }
 
-    .logo-icon {
+      .logo-icon {
         width: 40px;
         height: 40px;
         background: var(--primary);
@@ -78,30 +81,30 @@
         justify-content: center;
         flex-shrink: 0;
         transition: 0.3s;
-    }
+      }
 
-    .user-name-nav {
+      .user-name-nav {
         margin-left: 16px;
         font-weight: 700;
         font-size: 16px;
         opacity: 0;
         transition: opacity 0.2s ease-in;
-    }
+      }
 
-    .navbar:hover .user-name-nav {
+      .navbar:hover .user-name-nav {
         opacity: 1;
         transition-delay: 0.1s;
-    }
+      }
 
-    /* Navigation Links */
-    .nav-links-container {
+      /* Navigation Links */
+      .nav-links-container {
         display: flex;
         flex-direction: column;
         gap: 8px;
         width: 100%;
-    }
+      }
 
-    .nav-link {
+      .nav-link {
         display: flex;
         align-items: center;
         text-decoration: none;
@@ -112,388 +115,468 @@
         transition: background-color 0.2s, color 0.2s;
         position: relative;
         white-space: nowrap;
-    }
+      }
 
-    .nav-link i {
+      .nav-link i {
         min-width: 24px;
         height: 24px;
         margin-right: 20px; /* Space between icon and text */
-    }
-    
-    .nav-text {
+      }
+
+      .nav-text {
         opacity: 0;
-        
+
         transition: 0.2s;
         font-weight: 600;
         font-size: 15px;
-    }
+      }
 
-    /* Hover Effects */
-    .navbar:hover .nav-text { opacity: 1; transform: translateX(0); transition-delay: 0.05s; }
-    
-    .nav-link:hover { background-color: #eef2ff; color: var(--primary); }
-    
-    .nav-link:hover::before { 
-        content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; 
-        background: var(--primary); border-top-right-radius: 4px; border-bottom-right-radius: 4px;
-    }
+      /* Hover Effects */
+      .navbar:hover .nav-text {
+        opacity: 1;
+        transform: translateX(0);
+        transition-delay: 0.05s;
+      }
 
-    /* --- 3. MAIN CONTENT --- */
-    .main-content {
+      .nav-link:hover {
+        background-color: #eef2ff;
+        color: var(--primary);
+      }
+
+      .nav-link:hover::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: var(--primary);
+        border-top-right-radius: 4px;
+        border-bottom-right-radius: 4px;
+      }
+
+      /* --- 3. MAIN CONTENT --- */
+      .main-content {
         flex: 1;
         overflow-y: auto;
         height: 100vh;
         padding: 2rem;
-        opacity: 0; 
-        transition: opacity .5s;
-    }
-    .main-content.loaded { opacity: 1; }
+        opacity: 0;
+        transition: opacity 0.5s;
+      }
+      .main-content.loaded {
+        opacity: 1;
+      }
 
-    /* --- 4. PROFILE CSS --- */
-    .top-section { 
-        background: #FFFFFF; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-        overflow: hidden; margin-bottom: 2rem; padding-bottom: 1.5rem; border: 1px solid var(--border);
-    }
-    .profile-banner {
-        height: 220px; width: 100%;
-        background-color: #cbd5e1; background-size: cover; background-position: center; position: relative;
-    }
-    .edit-banner-btn {
-        position: absolute; top: 20px; right: 20px; background: white; border: none;
-        border-radius: 50%; width: 40px; height: 40px; cursor: pointer;
-        display: flex; align-items: center; justify-content: center;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.2s; z-index: 10;
-    }
-    .edit-banner-btn:hover { transform: scale(1.1); }
-    .profile-info-area { padding: 0 2rem; position: relative; display: flex; flex-direction: column; align-items: flex-start; }
-    .profile-photo-container { 
-        position: relative; width: 140px; height: 140px; margin-top: -70px; margin-bottom: 1rem; z-index: 5;
-    }
-    .profile-photo {
-        width: 100%; height: 100%; border-radius: 50%; object-fit: cover; 
-        border: 5px solid #FFFFFF; background: #eef2ff; 
-        display: flex; align-items: center; justify-content: center; 
-        font-size: 3rem; color: var(--primary); box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-    .upload-photo-btn { 
-        position: absolute; bottom: 5px; right: 5px; background: var(--primary); color: #fff; 
-        border: 2px solid #FFFFFF; border-radius: 50%; width: 32px; height: 32px; 
-        cursor: pointer; display: flex; align-items: center; justify-content: center;
-        transition: background-color .3s;
-    }
-    .upload-photo-btn:hover { background: var(--primary-hover); }
-    .student-name { font-size: 1.8rem; font-weight: 700; color: var(--text-main); margin-bottom: 4px; }
-    .student-roll { color: var(--text-muted); font-size: 1rem; font-weight: 500; }
+      /* --- 4. PROFILE CSS --- */
+      .top-section {
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border: 1px solid var(--border);
+      }
+      .profile-banner {
+        height: 220px;
+        width: 100%;
+        background-color: #cbd5e1;
+        background-size: cover;
+        background-position: center;
+        position: relative;
+      }
+      .edit-banner-btn {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: white;
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s;
+        z-index: 10;
+      }
+      .edit-banner-btn:hover {
+        transform: scale(1.1);
+      }
+      .profile-info-area {
+        padding: 0 2rem;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .profile-photo-container {
+        position: relative;
+        width: 140px;
+        height: 140px;
+        margin-top: -70px;
+        margin-bottom: 1rem;
+        z-index: 5;
+      }
+      .profile-photo {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 5px solid #ffffff;
+        background: #eef2ff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: var(--primary);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+      .upload-photo-btn {
+        position: absolute;
+        bottom: 5px;
+        right: 5px;
+        background: var(--primary);
+        color: #fff;
+        border: 2px solid #ffffff;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.3s;
+      }
+      .upload-photo-btn:hover {
+        background: var(--primary-hover);
+      }
+      .student-name {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--text-main);
+        margin-bottom: 4px;
+      }
+      .student-roll {
+        color: var(--text-muted);
+        font-size: 1rem;
+        font-weight: 500;
+      }
 
-    /* Details Form */
-    .profile-details { background: #fff; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 2rem; border: 1px solid var(--border); }
-    .section-title { font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
-    .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
-    .info-item { display: flex; flex-direction: column; }
-    .info-label { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-    .info-value input, .info-value select {
-        width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
-        font-size: 14px; color: var(--text-main); background: #fff; font-family: inherit;
-    }
-    .info-value input:focus, .info-value select:focus { outline: none; border-color: var(--primary); }
-    .info-value input:disabled, .info-value select:disabled { background: #f9fafb; color: #6b7280; cursor: not-allowed; border-color: #e5e7eb; }
+      /* Details Form */
+      .profile-details {
+        background: #fff;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        margin-bottom: 2rem;
+        border: 1px solid var(--border);
+      }
+      .section-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--text-main);
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 10px;
+      }
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+      }
+      .info-item {
+        display: flex;
+        flex-direction: column;
+      }
+      .info-label {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .info-value input,
+      .info-value select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 14px;
+        color: var(--text-main);
+        background: #fff;
+        font-family: inherit;
+      }
+      .info-value input:focus,
+      .info-value select:focus {
+        outline: none;
+        border-color: var(--primary);
+      }
+      .info-value input:disabled,
+      .info-value select:disabled {
+        background: #f9fafb;
+        color: #6b7280;
+        cursor: not-allowed;
+        border-color: #e5e7eb;
+      }
 
-    /* Action Buttons */
-    .edit-profile-btn {
-        margin-top: 2rem; padding: 10px 24px; background: var(--primary); color: #fff; border: none;
-        border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: 0.2s;
-    }
-    .edit-profile-btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
-    .edit-mode-buttons { display: none; gap: 1rem; margin-top: 2rem; }
-    .edit-mode-buttons.active { display: flex; }
-    .save-btn { flex: 1; padding: 10px; background: #16a34a; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
-    .cancel-btn { flex: 1; padding: 10px; background: #ef4444; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+      /* Action Buttons */
+      .edit-profile-btn {
+        margin-top: 2rem;
+        padding: 10px 24px;
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+      .edit-profile-btn:hover {
+        background: var(--primary-hover);
+        transform: translateY(-1px);
+      }
+      .edit-mode-buttons {
+        display: none;
+        gap: 1rem;
+        margin-top: 2rem;
+      }
+      .edit-mode-buttons.active {
+        display: flex;
+      }
+      .save-btn {
+        flex: 1;
+        padding: 10px;
+        background: #16a34a;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .cancel-btn {
+        flex: 1;
+        padding: 10px;
+        background: #ef4444;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+      }
 
-    .footer { text-align: center; padding: 2rem; color: var(--text-muted); font-size: 13px; }
+      .footer {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-muted);
+        font-size: 13px;
+      }
 
-    /* Mobile */
-    @media (max-width: 768px) {
-        .navbar { display: none; }
-        .main-content { padding: 1rem; }
-        .info-grid { grid-template-columns: 1fr; }
-        .profile-photo-container { margin: -70px auto 1rem auto; }
-        .profile-info-area { align-items: center; text-align: center; }
-    }
+      /* Mobile */
+      @media (max-width: 768px) {
+        .navbar {
+          display: none;
+        }
+        .main-content {
+          padding: 1rem;
+        }
+        .info-grid {
+          grid-template-columns: 1fr;
+        }
+        .profile-photo-container {
+          margin: -70px auto 1rem auto;
+        }
+        .profile-info-area {
+          align-items: center;
+          text-align: center;
+        }
+      }
 
-    .icon{font-size: 56px; position: relative; bottom: 15%; right: 5%;}
-</style>
-</head>
-<body>
-
+      .icon {
+        font-size: 56px;
+        position: relative;
+        bottom: 15%;
+        right: 5%;
+      }
+    </style>
+  </head>
+  <body>
     <nav class="navbar">
-        <a href="profile.html" class="user-brand">
-            <div class="logo-icon"><i data-lucide="user"></i></div>
-            <span class="user-name-nav" id="nav-user-name">Loading...</span>
+      <a href="profile.html" class="user-brand">
+        <div class="logo-icon"><i data-lucide="user"></i></div>
+        <span class="user-name-nav" id="nav-user-name">Loading...</span>
+      </a>
+
+      <div class="nav-links-container">
+        <a href="index.html" class="nav-link">
+          <div class="icon"><i data-lucide="home"></i></div>
+          <span class="nav-text">Home</span>
         </a>
-        
-        <div class="nav-links-container">
-            <a href="index.html" class="nav-link">
-               <div class="icon"> <i data-lucide="home"></i> </div>
-                <span class="nav-text">Home</span>
-            </a>
-            
-            <a href="veddit.html" class="nav-link">
-                <div class="icon"><i data-lucide="message-circle"></i></div>
-                <span class="nav-text">Veddit</span> 
-            </a>
 
-            <a href="news.html" class="nav-link">
-                <div class="icon"><i data-lucide="newspaper"></i> </div>
-                <span class="nav-text">Socio</span>
-            </a>
+        <a href="veddit.html" class="nav-link">
+          <div class="icon"><i data-lucide="message-circle"></i></div>
+          <span class="nav-text">Veddit</span>
+        </a>
 
-            <a href="calendram.html" class="nav-link">
-                <div class="icon"><i data-lucide="coffee"></i> </div>
-                <span class="nav-text">Lounge</span> 
-            </a>
+        <a href="news.html" class="nav-link">
+          <div class="icon"><i data-lucide="newspaper"></i></div>
+          <span class="nav-text">Socio</span>
+        </a>
 
-            <a href="events.html" class="nav-link">
-               <div class="icon"> <i data-lucide="ticket"></i></div>
-                <span class="nav-text">Campus Buzz</span>
-            </a>
-        </div>
+        <a href="calendram.html" class="nav-link">
+          <div class="icon"><i data-lucide="coffee"></i></div>
+          <span class="nav-text">Lounge</span>
+        </a>
+
+        <a href="events.html" class="nav-link">
+          <div class="icon"><i data-lucide="ticket"></i></div>
+          <span class="nav-text">Campus Buzz</span>
+        </a>
+        <a href="faqs.html" class="nav-link">
+            <i data-lucide="ticket"></i>
+            <span class="nav-text">FAQs</span>
+          </a>
+      </div>
     </nav>
 
-    <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhotoFileSelect(event)" />
-    <input type="file" id="bannerInput" accept="image/*" style="display:none" onchange="handleBannerFileSelect(event)" />
+    <input
+      type="file"
+      id="photoInput"
+      accept="image/*"
+      style="display: none"
+      onchange="handlePhotoFileSelect(event)"
+    />
+    <input
+      type="file"
+      id="bannerInput"
+      accept="image/*"
+      style="display: none"
+      onchange="handleBannerFileSelect(event)"
+    />
 
     <main class="main-content">
-        <div class="top-section">
-            <div class="profile-banner" id="profileBanner">
-                <button class="edit-banner-btn" onclick="uploadBanner()"><i data-lucide="camera" style="width:18px;"></i></button>
+      <div class="top-section">
+        <div class="profile-banner" id="profileBanner">
+          <button class="edit-banner-btn" onclick="uploadBanner()">
+            <i data-lucide="camera" style="width: 18px"></i>
+          </button>
+        </div>
+        <div class="profile-info-area">
+          <div class="profile-photo-container">
+            <div class="profile-photo" id="profilePhoto">
+              <i data-lucide="user" style="width: 60px; height: 60px"></i>
             </div>
-            <div class="profile-info-area">
-                <div class="profile-photo-container">
-                    <div class="profile-photo" id="profilePhoto"><i data-lucide="user" style="width:60px; height:60px;"></i></div>
-                    <button class="upload-photo-btn" onclick="uploadPhoto()"><i data-lucide="upload" style="width:14px;"></i></button>
-                </div>
-                <div class="student-identity">
-                    <div class="student-name" id="displayFullName">Student Name</div>
-                    <div class="student-roll" id="displayRollNumber">Loading...</div>
-                </div>
-            </div>
+            <button class="upload-photo-btn" onclick="uploadPhoto()">
+              <i data-lucide="upload" style="width: 14px"></i>
+            </button>
+          </div>
+          <div class="student-identity">
+            <div class="student-name" id="displayFullName">Student Name</div>
+            <div class="student-roll" id="displayRollNumber">Loading...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-details">
+        <h2 class="section-title">Academic & Personal Details</h2>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">Full Name</span
+            ><span class="info-value"
+              ><input type="text" id="fullName" value="" disabled
+            /></span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Roll Number</span
+            ><span class="info-value"
+              ><input type="text" id="rollNumber" value="" disabled
+            /></span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Branch</span>
+            <span class="info-value">
+              <select id="branch" disabled>
+                <option value="CSE">Computer Science (CSE)</option>
+                <option value="ECE">Electronics (ECE)</option>
+                <option value="ME">Mechanical (ME)</option>
+                <option value="CE">Civil (CE)</option>
+                <option value="AI">AI & Data Science</option>
+              </select>
+            </span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Year</span>
+            <span class="info-value">
+              <select id="year" disabled>
+                <option value="1">1st Year</option>
+                <option value="2">2nd Year</option>
+                <option value="3">3rd Year</option>
+                <option value="4">4th Year</option>
+              </select>
+            </span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Email</span
+            ><span class="info-value"
+              ><input type="email" id="email" value="" disabled
+            /></span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Phone</span
+            ><span class="info-value"
+              ><input type="tel" id="phone" value="" disabled
+            /></span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Date of Birth</span
+            ><span class="info-value"
+              ><input type="date" id="dob" value="" disabled
+            /></span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Blood Group</span>
+            <span class="info-value">
+              <select id="bloodGroup" disabled>
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB-</option>
+                <option value="O+">O+</option>
+                <option value="O-">O-</option>
+              </select>
+            </span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Address</span
+            ><span class="info-value"
+              ><input type="text" id="address" value="" disabled
+            /></span>
+          </div>
         </div>
 
-        <div class="profile-details">
-            <h2 class="section-title">Academic & Personal Details</h2>
-            <div class="info-grid">
-                <div class="info-item"><span class="info-label">Full Name</span><span class="info-value"><input type="text" id="fullName" value="" disabled /></span></div>
-                <div class="info-item"><span class="info-label">Roll Number</span><span class="info-value"><input type="text" id="rollNumber" value="" disabled /></span></div>
-                <div class="info-item">
-                    <span class="info-label">Branch</span>
-                    <span class="info-value">
-                        <select id="branch" disabled>
-                            <option value="CSE">Computer Science (CSE)</option><option value="ECE">Electronics (ECE)</option><option value="ME">Mechanical (ME)</option><option value="CE">Civil (CE)</option><option value="AI">AI & Data Science</option>
-                        </select>
-                    </span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Year</span>
-                    <span class="info-value">
-                        <select id="year" disabled><option value="1">1st Year</option><option value="2">2nd Year</option><option value="3">3rd Year</option><option value="4">4th Year</option></select>
-                    </span>
-                </div>
-                <div class="info-item"><span class="info-label">Email</span><span class="info-value"><input type="email" id="email" value="" disabled /></span></div>
-                <div class="info-item"><span class="info-label">Phone</span><span class="info-value"><input type="tel" id="phone" value="" disabled /></span></div>
-                <div class="info-item"><span class="info-label">Date of Birth</span><span class="info-value"><input type="date" id="dob" value="" disabled /></span></div>
-                <div class="info-item">
-                    <span class="info-label">Blood Group</span>
-                    <span class="info-value">
-                        <select id="bloodGroup" disabled>
-                            <option value="A+">A+</option><option value="A-">A-</option><option value="B+">B+</option><option value="B-">B-</option><option value="AB+">AB+</option><option value="AB-">AB-</option><option value="O+">O+</option><option value="O-">O-</option>
-                        </select>
-                    </span>
-                </div>
-                <div class="info-item"><span class="info-label">Address</span><span class="info-value"><input type="text" id="address" value="" disabled /></span></div>
-            </div>
-
-            <button class="edit-profile-btn" id="editBtn" onclick="toggleEditMode()">Edit Profile</button>
-            <div class="edit-mode-buttons" id="editModeButtons">
-                <button class="save-btn" onclick="saveProfile()">Save Changes</button>
-                <button class="cancel-btn" onclick="cancelEdit()">Cancel</button>
-            </div>
+        <button
+          class="edit-profile-btn"
+          id="editBtn"
+          onclick="toggleEditMode()"
+        >
+          Edit Profile
+        </button>
+        <div class="edit-mode-buttons" id="editModeButtons">
+          <button class="save-btn" onclick="saveProfile()">Save Changes</button>
+          <button class="cancel-btn" onclick="cancelEdit()">Cancel</button>
         </div>
+      </div>
 
-        <footer class="footer">&copy; 2025 Vedam School of Technology</footer>
+      <footer class="footer">&copy; 2025 Synapze</footer>
     </main>
 
-<script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyDCOT7bvPnU4zhOAkOG_nFxSLP0f58itgo",
-        authDomain: "veddit-a03a0.firebaseapp.com",
-        projectId: "veddit-a03a0",
-        storageBucket: "veddit-a03a0.firebasestorage.app",
-        messagingSenderId: "841975514674",
-        appId: "1:841975514674:web:3dcea2a6931cde3bfcde2b",
-        measurementId: "G-73VBEQ32GT"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    const auth = firebase.auth();
-    const storage = firebase.storage();
-
-    let currentUser = null;
-    const PROFILE_COLLECTION = 'users';
-
-    const displayFullName = document.getElementById('displayFullName');
-    const displayRollNumber = document.getElementById('displayRollNumber');
-    const navUserName = document.getElementById('nav-user-name');
-    const profilePhotoElement = document.getElementById('profilePhoto');
-    const profileBannerElement = document.getElementById('profileBanner');
-    const mainContent = document.querySelector('.main-content');
-    const photoInput = document.getElementById('photoInput');
-    const bannerInput = document.getElementById('bannerInput');
-
-    function showContent() { mainContent.classList.add('loaded'); }
-
-    auth.onAuthStateChanged(user => {
-        if (user) {
-            currentUser = user;
-            loadProfile(user.uid);
-        } else {
-            window.location.href = "index.html"; 
-        }
-    });
-
-    function loadProfile(uid) {
-        db.collection(PROFILE_COLLECTION).doc(uid).get().then(doc => {
-            if (doc.exists) {
-                const data = doc.data();
-                for (const key in data) {
-                    const element = document.getElementById(key);
-                    if (element) element.value = data[key];
-                }
-                const name = data.fullName || data.username || 'Student';
-                displayFullName.textContent = name;
-                navUserName.textContent = name;
-                displayRollNumber.textContent = data.rollNumber ? `Roll No: ${data.rollNumber}` : 'Roll No: --';
-
-                if (data.photoURL) profilePhotoElement.innerHTML = `<img src="${data.photoURL}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
-                if (data.bannerURL) profileBannerElement.style.backgroundImage = `url('${data.bannerURL}')`;
-            } else {
-                displayFullName.textContent = "New Student";
-                navUserName.textContent = "New Student";
-            }
-        }).catch(e => console.error(e)).finally(() => {
-            showContent();
-            lucide.createIcons();
-        });
-    }
-
-    let isEditMode = false;
-    let originalValues = {};
-
-    function toggleEditMode() {
-        isEditMode = true;
-        originalValues = {
-            fullName: document.getElementById('fullName').value,
-            rollNumber: document.getElementById('rollNumber').value,
-            branch: document.getElementById('branch').value,
-            year: document.getElementById('year').value,
-            email: document.getElementById('email').value,
-            phone: document.getElementById('phone').value,
-            dob: document.getElementById('dob').value,
-            bloodGroup: document.getElementById('bloodGroup').value,
-            address: document.getElementById('address').value
-        };
-        document.querySelectorAll('.info-value input, .info-value select').forEach(el => el.disabled = false);
-        document.getElementById('editBtn').style.display = 'none';
-        document.getElementById('editModeButtons').classList.add('active');
-    }
-
-    async function saveProfile() {
-        if (!currentUser) return;
-        const saveBtn = document.querySelector('.save-btn');
-        saveBtn.disabled = true; saveBtn.textContent = 'Saving...';
-
-        const updatedData = {
-            fullName: document.getElementById('fullName').value,
-            rollNumber: document.getElementById('rollNumber').value,
-            branch: document.getElementById('branch').value,
-            year: document.getElementById('year').value,
-            email: document.getElementById('email').value,
-            phone: document.getElementById('phone').value,
-            dob: document.getElementById('dob').value,
-            bloodGroup: document.getElementById('bloodGroup').value,
-            address: document.getElementById('address').value,
-            username: document.getElementById('fullName').value,
-            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-        };
-
-        try {
-            await db.collection(PROFILE_COLLECTION).doc(currentUser.uid).set(updatedData, { merge: true });
-            displayFullName.textContent = updatedData.fullName;
-            navUserName.textContent = updatedData.fullName;
-            displayRollNumber.textContent = `Roll No: ${updatedData.rollNumber}`;
-            document.querySelectorAll('.info-value input, .info-value select').forEach(el => el.disabled = true);
-            document.getElementById('editBtn').style.display = 'block';
-            document.getElementById('editModeButtons').classList.remove('active');
-            isEditMode = false;
-            alert('✅ Profile updated!');
-        } catch (e) {
-            alert('Error: ' + e.message);
-        } finally {
-            saveBtn.disabled = false; saveBtn.textContent = 'Save Changes';
-        }
-    }
-
-    function cancelEdit() {
-        if (originalValues.fullName !== undefined) {
-            for (const key in originalValues) {
-                const el = document.getElementById(key);
-                if(el) el.value = originalValues[key];
-            }
-        }
-        document.querySelectorAll('.info-value input, .info-value select').forEach(el => el.disabled = true);
-        document.getElementById('editBtn').style.display = 'block';
-        document.getElementById('editModeButtons').classList.remove('active');
-        isEditMode = false;
-    }
-
-    function uploadPhoto() { photoInput.click(); }
-    function uploadBanner() { bannerInput.click(); }
-
-    async function handlePhotoFileSelect(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        uploadImageAndGetURL(file, 'profile_photos').then(url => {
-            if(url) {
-                profilePhotoElement.innerHTML = `<img src="${url}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
-                db.collection(PROFILE_COLLECTION).doc(currentUser.uid).set({ photoURL: url }, { merge: true });
-            }
-        });
-    }
-
-    async function handleBannerFileSelect(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        uploadImageAndGetURL(file, 'banners').then(url => {
-            if(url) {
-                profileBannerElement.style.backgroundImage = `url('${url}')`;
-                db.collection(PROFILE_COLLECTION).doc(currentUser.uid).set({ bannerURL: url }, { merge: true });
-            }
-        });
-    }
-
-    async function uploadImageAndGetURL(file, folder) {
-        try {
-            const ref = storage.ref().child(`${folder}/${currentUser.uid}/${Date.now()}_${file.name}`);
-            const snapshot = await ref.put(file);
-            return await snapshot.ref.getDownloadURL();
-        } catch (e) {
-            console.error(e);
-            alert("Upload failed: " + e.message);
-            return null;
-        }
-    }
-
-    lucide.createIcons();
-</script>
-</body>
+    <script src="js/profile.js"></script>
+  </body>
 </html>

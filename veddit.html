@@ -1,28 +1,28 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Veddit — Campus Forum</title>
-  
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <head>
+    <meta charset="utf-8" />
+    <title>Veddit — Campus Forum</title>
 
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/toxicity@1.2.2/dist/toxicity.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
 
-  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-storage-compat.js"></script>
-  
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  
-  <style>
-    /* --- 1. VARIABLES & RESET --- */
-    :root {
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/toxicity@1.2.2/dist/toxicity.min.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-storage-compat.js"></script>
+
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+    <style>
+      /* --- 1. VARIABLES & RESET --- */
+      :root {
         --bg: #f5f7fb;
         --card: #fff;
         --muted: #6b7280;
-        --primary: #4f46e5; 
+        --primary: #4f46e5;
         --accent: #4f46e5;
         --accent-hover: #4338ca;
         --danger: #ef4444;
@@ -30,21 +30,21 @@
         --line-color: #e5e7eb;
         --text-main: #1f2937;
         --border: #e5e7eb;
-    }
+      }
 
-    body {
-        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      body {
+        font-family: "Inter", system-ui, -apple-system, sans-serif;
         margin: 0;
         padding: 0;
         background: var(--bg);
         color: #1f2937;
         display: flex;
         height: 100vh;
-        overflow: hidden; 
-    }
+        overflow: hidden;
+      }
 
-    /* --- 2. VERTICAL NAVBAR (Arrow Style) --- */
-    .navbar {
+      /* --- 2. VERTICAL NAVBAR (Arrow Style) --- */
+      .navbar {
         width: 60px; /* Collapsed width */
         height: 100vh;
         background: white;
@@ -54,265 +54,648 @@
         transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         z-index: 100;
         flex-shrink: 0;
-        box-shadow: 4px 0 15px rgba(0,0,0,0.05);
+        box-shadow: 4px 0 15px rgba(0, 0, 0, 0.05);
         position: relative;
         overflow: hidden;
-    }
+      }
 
-    .navbar:hover { width: 260px; }
+      .navbar:hover {
+        width: 260px;
+      }
 
-    /* Collapsed Arrow */
-    .nav-collapsed-arrow {
-        position: absolute; top: 50%; left: 50%;
-        transform: translate(-50%, -50%); color: var(--muted);
-        transition: opacity 0.2s, transform 0.3s; pointer-events: none;
-    }
-    .navbar:hover .nav-collapsed-arrow { opacity: 0; transform: translate(-50%, -50%) rotate(180deg); }
+      /* Collapsed Arrow */
+      .nav-collapsed-arrow {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: var(--muted);
+        transition: opacity 0.2s, transform 0.3s;
+        pointer-events: none;
+      }
+      .navbar:hover .nav-collapsed-arrow {
+        opacity: 0;
+        transform: translate(-50%, -50%) rotate(180deg);
+      }
 
-    /* Expanded Content */
-    .nav-expanded-content {
-        opacity: 0; display: flex; flex-direction: column;
-        width: 260px; height: 100%; padding: 20px;
-        transition: opacity 0.2s ease-in; pointer-events: none;
-    }
-    .navbar:hover .nav-expanded-content { opacity: 1; pointer-events: auto; transition-delay: 0.1s; }
+      /* Expanded Content */
+      .nav-expanded-content {
+        opacity: 0;
+        display: flex;
+        flex-direction: column;
+        width: 260px;
+        height: 100%;
+        padding: 20px;
+        transition: opacity 0.2s ease-in;
+        pointer-events: none;
+      }
+      .navbar:hover .nav-expanded-content {
+        opacity: 1;
+        pointer-events: auto;
+        transition-delay: 0.1s;
+      }
 
-    /* Brand & Links */
-    .user-brand {
-        display: flex; align-items: center; text-decoration: none;
-        color: var(--text-main); margin-bottom: 30px; cursor: pointer; white-space: nowrap;
-    }
-    .logo-icon {
-        width: 40px; height: 40px; background: var(--primary); color: white;
-        border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-    }
-    .user-name-nav { margin-left: 12px; font-weight: 700; font-size: 16px; }
+      /* Brand & Links */
+      .user-brand {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        color: var(--text-main);
+        margin-bottom: 30px;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .logo-icon {
+        width: 40px;
+        height: 40px;
+        background: var(--primary);
+        color: white;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .user-name-nav {
+        margin-left: 12px;
+        font-weight: 700;
+        font-size: 16px;
+      }
 
-    .nav-links-container { display: flex; flex-direction: column; gap: 5px; }
-    .nav-link {
-        display: flex; align-items: center; text-decoration: none; color: var(--muted);
-        padding: 12px 15px; border-radius: 8px; transition: 0.2s; white-space: nowrap;
-    }
-    .nav-link i { min-width: 20px; height: 20px; margin-right: 15px; }
-    .nav-text { font-weight: 600; font-size: 15px; }
-    .nav-link:hover { background-color: #eef2ff; color: var(--primary); }
+      .nav-links-container {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+      .nav-link {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        color: var(--muted);
+        padding: 12px 15px;
+        border-radius: 8px;
+        transition: 0.2s;
+        white-space: nowrap;
+      }
+      .nav-link i {
+        min-width: 20px;
+        height: 20px;
+        margin-right: 15px;
+      }
+      .nav-text {
+        font-weight: 600;
+        font-size: 15px;
+      }
+      .nav-link:hover {
+        background-color: #eef2ff;
+        color: var(--primary);
+      }
 
-    /* --- 3. MAIN CONTENT LAYOUT --- */
-    .wrap {
-        flex: 1; 
-        height: 100vh; 
-        overflow-y: auto; 
-        padding: 20px; 
+      /* --- 3. MAIN CONTENT LAYOUT --- */
+      .wrap {
+        flex: 1;
+        height: 100vh;
+        overflow-y: auto;
+        padding: 20px;
         box-sizing: border-box;
-    }
-    
-    .wrap > header, .wrap > .card, .wrap > #feed {
-        max-width: 900px; margin-left: auto; margin-right: auto;
-    }
+      }
 
-    /* --- 4. FORUM STYLES --- */
-    header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
-    h1 { margin:0; font-size:22px; color:#111827; }
-    .small { font-size:13px; color:var(--muted); }
-    
-    .card { background:var(--card); padding:16px; border-radius:12px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom:16px; border:1px solid #e5e7eb; }
-    .hidden { display:none !important; }
+      .wrap > header,
+      .wrap > .card,
+      .wrap > #feed {
+        max-width: 900px;
+        margin-left: auto;
+        margin-right: auto;
+      }
 
-    input, textarea, select { padding:10px 12px; border-radius:8px; border:1px solid #d1d5db; width:100%; box-sizing:border-box; font-family:inherit; margin-bottom:8px; }
-    input:focus, textarea:focus { outline:none; border-color:var(--accent); box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2); }
-    
-    button { padding:8px 14px; border-radius:8px; border:0; background:var(--accent); color:#fff; cursor:pointer; font-weight:500; transition:0.2s; }
-    button:hover { background:var(--accent-hover); }
-    button.ghost { background:transparent; color:var(--muted); border:1px solid #e5e7eb; }
-    button.ghost:hover { background:#f3f4f6; color:#111; }
-    button.danger { background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; }
-    button.danger:hover { background:#fecaca; }
-    button.small { font-size:11px; padding:4px 8px; }
-    
-    .row { display:flex; gap:10px; align-items:center; }
-    .space-between { justify-content:space-between; }
-    
-    /* Thread Styles */
-    .reply-node { margin-top: 10px; position: relative; }
-    .reply-content { background: #fff; padding: 8px 0; }
-    .thread-children { margin-left: 12px; padding-left: 12px; border-left: 2px solid var(--line-color); }
-    .reply-header { display:flex; gap:8px; align-items:center; font-size:12px; color:#555; margin-bottom:4px; }
-    .reply-body { font-size:14px; color:#222; margin-bottom:6px; line-height:1.4; }
-    .reply-actions { display:flex; gap:10px; align-items:center; font-size:11px; font-weight:bold; color:#666; }
-    .action-link { cursor:pointer; padding:2px 4px; border-radius:4px; display:flex; align-items:center; gap:4px; }
-    .action-link:hover { background:#f3f4f6; color:#111; }
-    .continue-thread { margin-top: 8px; font-size: 13px; font-weight: 600; color: var(--accent); cursor: pointer; display: inline-block; padding: 4px 8px; border-radius: 12px; background: #eef2ff; }
-    
-    /* Modals */
-    .modal { position:fixed; left:0; top:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.5); z-index:1000; backdrop-filter:blur(2px); }
-    .modal .card { width:90%; max-width:750px; height:90vh; display:flex; flex-direction:column; padding:0; overflow:hidden; }
-    .modal-header { padding:12px 16px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; background:#fff; }
-    .modal-scroll { flex:1; overflow-y:auto; padding:16px; background:#fff; }
-    .modal-footer { padding:12px; border-top:1px solid #eee; background:#fff; }
+      /* --- 4. FORUM STYLES --- */
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 22px;
+        color: #111827;
+      }
+      .small {
+        font-size: 13px;
+        color: var(--muted);
+      }
 
-    #replyingToIndicator { background:#e0e7ff; color:#4338ca; padding:4px 8px; border-radius:4px; font-size:12px; display:inline-block; margin-bottom:5px; display:none; }
-    #replyingToIndicator span { cursor:pointer; font-weight:bold; margin-left:5px; }
+      .card {
+        background: var(--card);
+        padding: 16px;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        margin-bottom: 16px;
+        border: 1px solid #e5e7eb;
+      }
+      .hidden {
+        display: none !important;
+      }
 
-    #authArea { text-align:right; }
-    .badge { font-size:10px; text-transform:uppercase; padding:2px 4px; border-radius:4px; font-weight:bold; }
-    .badge-op { background:#e0e7ff; color:var(--accent); }
-    .badge-student { background:#f3f4f6; color:#374151; }
+      input,
+      textarea,
+      select {
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid #d1d5db;
+        width: 100%;
+        box-sizing: border-box;
+        font-family: inherit;
+        margin-bottom: 8px;
+      }
+      input:focus,
+      textarea:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+      }
 
-    #focusBar { background: #eff6ff; border-bottom: 1px solid #dbeafe; padding: 8px 16px; font-size: 13px; color: #1e40af; display: none; align-items: center; gap: 8px; }
-    #focusBar button { background: white; color: #1e40af; border: 1px solid #bfdbfe; font-size: 11px; padding: 2px 8px; border-radius: 4px; }
-    
-    #aiStatus { font-size:11px; color:var(--success); font-weight:bold; display:none; }
-    .ai-error { color: var(--danger) !important; font-weight:bold; }
+      button {
+        padding: 8px 14px;
+        border-radius: 8px;
+        border: 0;
+        background: var(--accent);
+        color: #fff;
+        cursor: pointer;
+        font-weight: 500;
+        transition: 0.2s;
+      }
+      button:hover {
+        background: var(--accent-hover);
+      }
+      button.ghost {
+        background: transparent;
+        color: var(--muted);
+        border: 1px solid #e5e7eb;
+      }
+      button.ghost:hover {
+        background: #f3f4f6;
+        color: #111;
+      }
+      button.danger {
+        background: #fee2e2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+      }
+      button.danger:hover {
+        background: #fecaca;
+      }
+      button.small {
+        font-size: 11px;
+        padding: 4px 8px;
+      }
 
-    /* Mobile Responsive */
-    @media (max-width: 768px) {
-        .navbar { display: none; }
-        .wrap { padding: 15px; }
-        body { overflow: auto; display: block; }
-        .wrap { height: auto; overflow: visible; }
-    }
-  </style>
-</head>
-<body>
-  
-  <nav class="navbar">
-        <div class="nav-collapsed-arrow">
-            <i data-lucide="arrow-right" style="width:24px; height:24px;"></i>
-        </div>
+      .row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .space-between {
+        justify-content: space-between;
+      }
 
-        <div class="nav-expanded-content">
-            <a href="profile.html" class="user-brand">
-                <div class="logo-icon"><i data-lucide="user"></i></div>
-                <span class="user-name-nav" id="nav-user-name">Loading...</span>
-            </a>
-            
-            <div class="nav-links-container">
-                <a href="index.html" class="nav-link">
-                    <i data-lucide="home"></i>
-                    <span class="nav-text">Home</span>
-                </a>
-                
-                <a href="veddit.html" class="nav-link" style="background-color: #eef2ff; color: var(--primary);">
-                    <i data-lucide="message-circle"></i>
-                    <span class="nav-text">Veddit</span> 
-                </a>
+      /* Thread Styles */
+      .reply-node {
+        margin-top: 10px;
+        position: relative;
+      }
+      .reply-content {
+        background: #fff;
+        padding: 8px 0;
+      }
+      .thread-children {
+        margin-left: 12px;
+        padding-left: 12px;
+        border-left: 2px solid var(--line-color);
+      }
+      .reply-header {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        font-size: 12px;
+        color: #555;
+        margin-bottom: 4px;
+      }
+      .reply-body {
+        font-size: 14px;
+        color: #222;
+        margin-bottom: 6px;
+        line-height: 1.4;
+      }
+      .reply-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        font-size: 11px;
+        font-weight: bold;
+        color: #666;
+      }
+      .action-link {
+        cursor: pointer;
+        padding: 2px 4px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .action-link:hover {
+        background: #f3f4f6;
+        color: #111;
+      }
+      .continue-thread {
+        margin-top: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--accent);
+        cursor: pointer;
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 12px;
+        background: #eef2ff;
+      }
 
-                <a href="news.html" class="nav-link">
-                    <i data-lucide="newspaper"></i> 
-                    <span class="nav-text">Socio</span>
-                </a>
+      /* Modals */
+      .modal {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        backdrop-filter: blur(2px);
+      }
+      .modal .card {
+        width: 90%;
+        max-width: 750px;
+        height: 90vh;
+        display: flex;
+        flex-direction: column;
+        padding: 0;
+        overflow: hidden;
+      }
+      .modal-header {
+        padding: 12px 16px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #fff;
+      }
+      .modal-scroll {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+        background: #fff;
+      }
+      .modal-footer {
+        padding: 12px;
+        border-top: 1px solid #eee;
+        background: #fff;
+      }
 
-                <a href="calendram.html" class="nav-link">
-                    <i data-lucide="coffee"></i> 
-                    <span class="nav-text">Lounge</span> 
-                </a>
+      #replyingToIndicator {
+        background: #e0e7ff;
+        color: #4338ca;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        display: inline-block;
+        margin-bottom: 5px;
+        display: none;
+      }
+      #replyingToIndicator span {
+        cursor: pointer;
+        font-weight: bold;
+        margin-left: 5px;
+      }
 
-                <a href="events.html" class="nav-link">
-                    <i data-lucide="ticket"></i>
-                    <span class="nav-text">Campus Buzz</span>
-                </a>
-            </div>
-        </div>
-    </nav>
-  <div class="wrap">
-    <header>
-      <div>
-        <h1>Veddit</h1>
-        <div class="row">
-          <div class="small">Campus Doubt Forum</div>
-          <div id="aiStatus">✨ AI Shield Active</div>
-        </div>
-      </div>
-      <div id="authArea">
-        <div id="authStatus" class="small" style="margin-bottom:5px;">Not signed in</div>
-        <div id="authLinks">
-          <a href="signup.html" class="link" style="color:var(--accent);text-decoration:underline;">Sign In / Join</a>
-        </div>
-        <button id="signOutBtn" class="small ghost hidden">Sign Out</button>
-      </div>
-    </header>
+      #authArea {
+        text-align: right;
+      }
+      .badge {
+        font-size: 10px;
+        text-transform: uppercase;
+        padding: 2px 4px;
+        border-radius: 4px;
+        font-weight: bold;
+      }
+      .badge-op {
+        background: #e0e7ff;
+        color: var(--accent);
+      }
+      .badge-student {
+        background: #f3f4f6;
+        color: #374151;
+      }
 
-    <div id="postMin" class="card row space-between pointer" onclick="togglePostCreator(true)" style="cursor:pointer">
-      <div><strong>Have a doubt?</strong><div class="small">Ask the community</div></div>
-      <button>Ask Doubt</button>
-    </div>
+      #focusBar {
+        background: #eff6ff;
+        border-bottom: 1px solid #dbeafe;
+        padding: 8px 16px;
+        font-size: 13px;
+        color: #1e40af;
+        display: none;
+        align-items: center;
+        gap: 8px;
+      }
+      #focusBar button {
+        background: white;
+        color: #1e40af;
+        border: 1px solid #bfdbfe;
+        font-size: 11px;
+        padding: 2px 8px;
+        border-radius: 4px;
+      }
 
-    <div id="postCard" class="card hidden">
-      <div class="row space-between"><strong>Create Post</strong><button class="ghost small" onclick="togglePostCreator(false)">Cancel</button></div>
-      <div style="margin-top:12px;">
-        <input id="qTitle" placeholder="Title" maxlength="100">
-        <textarea id="qBody" rows="4" placeholder="Describe your doubt..."></textarea>
-        <div class="row"><div style="flex:1"><input id="qTag" placeholder="Tag (e.g. Physics)"></div></div>
-        <div class="row space-between" style="margin-top:10px;">
-           <label style="font-size:13px; display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" id="qAnon" style="width:auto; margin:0;"> Post Anonymously</label>
-           <button id="postBtn">Post Doubt</button>
-        </div>
-        <div id="postStatus" class="small" style="color:var(--accent); margin-top:5px;"></div>
-      </div>
-    </div>
+      #aiStatus {
+        font-size: 11px;
+        color: var(--success);
+        font-weight: bold;
+        display: none;
+      }
+      .ai-error {
+        color: var(--danger) !important;
+        font-weight: bold;
+      }
 
-    <div id="feed" class="card" style="background:transparent; padding:0; box-shadow:none; border:0;">
-      <h3 style="margin:0 0 10px 4px; font-size:16px;">Recent Discussions</h3>
-      <div id="feedList"></div>
-    </div>
-  </div>
-
-  <div id="replyModal" class="modal hidden">
-    <div class="card">
-      <div class="modal-header"><strong>Thread</strong><button class="ghost small" onclick="closeThread()">Close</button></div>
-      <div id="focusBar"><span>Viewing single thread.</span><button onclick="resetToFullThread()">View Full</button></div>
-      <div class="modal-scroll">
-        <div id="threadContext" style="background:#f9fafb; padding:15px; border-radius:8px; margin-bottom:20px; border:1px solid #e5e7eb;"></div>
-        <div id="focusedParentContext" style="background:#eef2ff; padding:15px; border-radius:8px; margin-bottom:20px; border:1px solid #c7d2fe; display:none;"></div>
-        <div id="repliesContainer"></div>
-      </div>
-      <div class="modal-footer">
-        <div id="replyingToIndicator">Replying to <b id="replyTargetName">...</b> <span onclick="cancelReplyTarget()">×</span></div>
-        <textarea id="replyInput" rows="2" placeholder="Write a reply..."></textarea>
-        <div class="row space-between">
-          <label style="font-size:12px; display:flex; align-items:center; gap:4px;"><input type="checkbox" id="replyAnon" style="width:auto;"> Anonymous</label>
-          <button id="sendReplyBtn" class="small" style="color: white;">Send Reply</button>
-        </div>
-        <div id="replyStatus" class="small" style="margin-top:5px;"></div>
-      </div>
-    </div>
-  </div>
-
-  <script type="module">
-    // Re-initialize Firebase just for this script block if needed, or rely on global
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
-
-    // Use existing config logic from js/firebase.js (Assuming veddit.js handles the rest)
-    // We just need this for the navbar profile name
-    const app = firebase.app(); // Get the app initialized in other scripts
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-
-    auth.onAuthStateChanged(async (user) => {
-        const nameEl = document.getElementById('nav-user-name');
-        if (user) {
-            try {
-                const docSnap = await db.collection("users").doc(user.uid).get();
-                if (docSnap.exists) {
-                    const data = docSnap.data();
-                    nameEl.innerText = data.fullName || data.username || "My Profile";
-                }
-            } catch (e) {
-                console.error("Sidebar Name Error:", e);
-            }
-        } else {
-            nameEl.innerText = "Guest";
+      /* Mobile Responsive */
+      @media (max-width: 768px) {
+        .navbar {
+          display: none;
         }
-    });
+        .wrap {
+          padding: 15px;
+        }
+        body {
+          overflow: auto;
+          display: block;
+        }
+        .wrap {
+          height: auto;
+          overflow: visible;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="nav-collapsed-arrow">
+        <i data-lucide="arrow-right" style="width: 24px; height: 24px"></i>
+      </div>
+
+      <div class="nav-expanded-content">
+        <a href="profile.html" class="user-brand">
+          <div class="logo-icon"><i data-lucide="user"></i></div>
+          <span class="user-name-nav" id="nav-user-name">Loading...</span>
+        </a>
+
+        <div class="nav-links-container">
+          <a href="index.html" class="nav-link">
+            <i data-lucide="home"></i>
+            <span class="nav-text">Home</span>
+          </a>
+
+          <a
+            href="veddit.html"
+            class="nav-link"
+            style="background-color: #eef2ff; color: var(--primary)"
+          >
+            <i data-lucide="message-circle"></i>
+            <span class="nav-text">Veddit</span>
+          </a>
+
+          <a href="news.html" class="nav-link">
+            <i data-lucide="newspaper"></i>
+            <span class="nav-text">Socio</span>
+          </a>
+
+          <a href="calendram.html" class="nav-link">
+            <i data-lucide="coffee"></i>
+            <span class="nav-text">Lounge</span>
+          </a>
+
+          <a href="events.html" class="nav-link">
+            <i data-lucide="ticket"></i>
+            <span class="nav-text">Campus Buzz</span>
+          </a>
+          <a href="faqs.html" class="nav-link">
+            <i data-lucide="ticket"></i>
+            <span class="nav-text">FAQs</span>
+          </a>
+        </div>
+      </div>
+    </nav>
+    <div class="wrap">
+      <header>
+        <div>
+          <h1>Veddit</h1>
+          <div class="row">
+            <div class="small">Campus Doubt Forum</div>
+            <div id="aiStatus">✨ AI Shield Active</div>
+          </div>
+        </div>
+        <div id="authArea">
+          <div id="authStatus" class="small" style="margin-bottom: 5px">
+            Not signed in
+          </div>
+          <div id="authLinks">
+            <a
+              href="signup.html"
+              class="link"
+              style="color: var(--accent); text-decoration: underline"
+              >Sign In / Join</a
+            >
+          </div>
+          <button id="signOutBtn" class="small ghost hidden">Sign Out</button>
+        </div>
+        
+      </header>
+
+      <div
+        id="postMin"
+        class="card row space-between pointer"
+        onclick="togglePostCreator(true)"
+        style="cursor: pointer"
+      >
+        <div>
+          <strong>Have a doubt?</strong>
+          <div class="small">Ask the community</div>
+        </div>
+        <button>Ask Doubt</button>
+      </div>
+
+      <div id="postCard" class="card hidden">
+        <div class="row space-between">
+          <strong>Create Post</strong
+          ><button class="ghost small" onclick="togglePostCreator(false)">
+            Cancel
+          </button>
+        </div>
+        <div style="margin-top: 12px">
+          <input id="qTitle" placeholder="Title" maxlength="100" />
+          <textarea
+            id="qBody"
+            rows="4"
+            placeholder="Describe your doubt..."
+          ></textarea>
+          <div class="row">
+            <div style="flex: 1">
+              <input id="qTag" placeholder="Tag (e.g. Physics)" />
+            </div>
+          </div>
+          <div class="row space-between" style="margin-top: 10px">
+            <label
+              style="
+                font-size: 13px;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                cursor: pointer;
+              "
+              ><input
+                type="checkbox"
+                id="qAnon"
+                style="width: auto; margin: 0"
+              />
+              Post Anonymously</label
+            >
+            <button id="postBtn">Post Doubt</button>
+          </div>
+          <div
+            id="postStatus"
+            class="small"
+            style="color: var(--accent); margin-top: 5px"
+          ></div>
+        </div>
+      </div>
+
+      <div
+        id="feed"
+        class="card"
+        style="background: transparent; padding: 0; box-shadow: none; border: 0"
+      >
+        <h3 style="margin: 0 0 10px 4px; font-size: 16px">
+          Recent Discussions
+        </h3>
+        <div id="feedList"></div>
+      </div>
+    </div>
+
+    <div id="replyModal" class="modal hidden">
+      <div class="card">
+        <div class="modal-header">
+          <strong>Thread</strong
+          ><button class="ghost small" onclick="closeThread()">Close</button>
+        </div>
+        <div id="focusBar">
+          <span>Viewing single thread.</span
+          ><button onclick="resetToFullThread()">View Full</button>
+        </div>
+        <div class="modal-scroll">
+          <div
+            id="threadContext"
+            style="
+              background: #f9fafb;
+              padding: 15px;
+              border-radius: 8px;
+              margin-bottom: 20px;
+              border: 1px solid #e5e7eb;
+            "
+          ></div>
+          <div
+            id="focusedParentContext"
+            style="
+              background: #eef2ff;
+              padding: 15px;
+              border-radius: 8px;
+              margin-bottom: 20px;
+              border: 1px solid #c7d2fe;
+              display: none;
+            "
+          ></div>
+          <div id="repliesContainer"></div>
+        </div>
+        <div class="modal-footer">
+          <div id="replyingToIndicator">
+            Replying to <b id="replyTargetName">...</b>
+            <span onclick="cancelReplyTarget()">×</span>
+          </div>
+          <textarea
+            id="replyInput"
+            rows="2"
+            placeholder="Write a reply..."
+          ></textarea>
+          <div class="row space-between">
+            <label
+              style="
+                font-size: 12px;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+              "
+              ><input type="checkbox" id="replyAnon" style="width: auto" />
+              Anonymous</label
+            >
+            <button id="sendReplyBtn" class="small" style="color: white">
+              Send Reply
+            </button>
+          </div>
+          <div id="replyStatus" class="small" style="margin-top: 5px"></div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      // Re-initialize Firebase just for this script block if needed, or rely on global
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+      import {
+        getAuth,
+        onAuthStateChanged,
+      } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+      import {
+        getFirestore,
+        doc,
+        getDoc,
+      } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+
+      // Use existing config logic from js/firebase.js (Assuming veddit.js handles the rest)
+      // We just need this for the navbar profile name
+      const app = firebase.app(); // Get the app initialized in other scripts
+      const auth = firebase.auth();
+      const db = firebase.firestore();
+
+      auth.onAuthStateChanged(async (user) => {
+        const nameEl = document.getElementById("nav-user-name");
+        if (user) {
+          try {
+            const docSnap = await db.collection("users").doc(user.uid).get();
+            if (docSnap.exists) {
+              const data = docSnap.data();
+              nameEl.innerText = data.fullName || data.username || "My Profile";
+            }
+          } catch (e) {
+            console.error("Sidebar Name Error:", e);
+          }
+        } else {
+          nameEl.innerText = "Guest";
+        }
+      });
+
+      // Ensure Icons Render
+      lucide.createIcons();
+    </script>
+
+    <script src="js/firebase.js"></script>
+    <script src="js/veddit.js"></script>
     
-    // Ensure Icons Render
-    lucide.createIcons();
-  </script>
-
-  <script src="js/firebase.js"></script>
-  <script src="js/veddit.js"></script>
-
-</body>
+  </body>
 </html>

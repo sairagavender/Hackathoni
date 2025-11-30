@@ -1,0 +1,121 @@
+/* --- KEEPING CUSTOM CSS FOR COMPLEX COMPONENTS (Timetable/Calendar) --- */
+
+/* Variables mapped to Tailwind colors for consistency */
+:root {
+  --primary: #4f46e5; /* indigo-600 */
+  --bg: #f3f4f6; /* gray-100 */
+  --border: #e5e7eb; /* gray-200 */
+}
+
+body {
+  font-family: "Inter", sans-serif;
+  background-color: var(--bg);
+}
+
+/* Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
+}
+
+/* Timetable Specifics */
+.timetable-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+th,
+td {
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  text-align: center;
+  white-space: nowrap;
+}
+th {
+  background: #f9fafb;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+/* Calendar Specifics */
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  text-align: center;
+  margin-top: 10px;
+}
+.cal-day {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 0.8rem;
+  cursor: default;
+  transition: 0.2s;
+}
+.cal-day:hover:not(.empty) {
+  background: #f3f4f6;
+}
+.cal-day.today {
+  background: var(--primary);
+  color: white;
+  font-weight: 700;
+}
+.cal-day.event {
+  background: #fce7f3;
+  color: #be185d;
+  font-weight: 700;
+}
+
+/* Form Inputs */
+.form-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  transition: 0.2s;
+}
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  ring: 2px solid #e0e7ff;
+}
+
+/* Loader */
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e5e7eb;
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Utility */
+.view-content.hidden {
+  display: none;
+}
